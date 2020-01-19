@@ -1,6 +1,6 @@
 // FIXME: Make me pass! Diff budget: 30 lines.
 
-// I AM NOT DONE
+
 
 #[derive(Default)]
 struct Builder {
@@ -9,13 +9,32 @@ struct Builder {
 }
 
 impl Builder {
-    // fn string(...
-
-    // fn number(...
+    fn default()-> Builder { Builder {
+	string: None,
+	number: None,
+    }}
+    fn string<T:Into<String>>(&mut self, x: T)-> &mut Self {
+	self.string = Some(x.into());
+	self
+    }
+    fn number(&mut self, x:usize)->&mut Self{
+	self.number = Some(x);
+	self
+    }
 }
-
 impl ToString for Builder {
     // Implement the trait
+    fn to_string(&self)->String{
+	if self.number.is_some() && self.string.is_some() {
+		[self.string.clone().unwrap() ,self.number.unwrap().to_string()].join(" ")
+	} else if self.number.is_some() {
+		self.number.unwrap().to_string()
+	} else if self.string.is_some() {		
+		self.string.clone().unwrap()
+	} else {
+		String::from("")
+	}	
+    }
 }
 
 // Do not modify this function.
