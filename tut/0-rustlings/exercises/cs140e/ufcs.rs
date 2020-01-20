@@ -1,7 +1,6 @@
 // FIXME: Make me pass! Diff budget: 2 lines.
 
 
-
 struct Dummy;
 
 pub trait Foo {

@@ -8,7 +8,7 @@ struct RefWrapper<'a,T:'a>(&'a T);
 
 impl<'a,T> RefWrapper<'a,T> {
     fn inner(&'a self) -> &'a T {
-        self.0 
+        self.0
     }
 }
 
