@@ -1,0 +1,3 @@
+The ReadVolatile implements readable trait which returns a immutable innter pointer
+and does not implement a writable trait, and the WriteVolatile implements the writeable trait
+that has a returns a the mutable inner pointer. The WriteVolatile does not implement a readable trait.

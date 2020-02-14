@@ -1,0 +1,3 @@
+Vec::push is based on a operation system support which allows the user not have
+to track the memory.
+StackVec::push fails if all memory is already allocated, no memory left to allocate.

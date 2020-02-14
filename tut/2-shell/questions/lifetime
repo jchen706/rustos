@@ -1,0 +1,2 @@
+Bound is required because the Rust only lets a initialize variable to live within
+the scope of the function definition. If bound was not enforce

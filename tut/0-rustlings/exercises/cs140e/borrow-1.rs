@@ -2,8 +2,11 @@
 
 
 
+<<<<<<< HEAD
 // What traits does this struct need to derive?
 #[derive(Clone, Copy)] 
+=======
+>>>>>>> skeleton/lab2
 struct MyType(usize);
 
 // Do not modify this function.

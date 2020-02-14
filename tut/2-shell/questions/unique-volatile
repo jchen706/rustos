@@ -1,0 +1,6 @@
+Volatile does not implement Sync which mean it may not be thread-safe and can have
+interior mutability.
+Unique<Volatile> has to implement the Sync trait which means the type T
+has implements the Send which allows the types able to transferred between
+boundaries preventing data races with undefined behavior.
+Unique<Volatile> allows a type to have the safety to share between threads to prevent data races.

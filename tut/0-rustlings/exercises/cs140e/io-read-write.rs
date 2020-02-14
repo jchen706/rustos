@@ -5,7 +5,7 @@
 use std::io;
 
 struct ReadWrapper<T: io::Read> {
-    inner: T,
+    inner: T
 }
 
 impl io::Read for ReadWrapper<Box<dyn io::Read>> {
@@ -14,4 +14,4 @@ impl io::Read for ReadWrapper<Box<dyn io::Read>> {
     }
 }
 
-fn main() {}
+fn main() { }
