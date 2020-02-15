@@ -2,6 +2,10 @@ use stack_vec::StackVec;
 
 use crate::console::{kprint, kprintln, CONSOLE};
 
+use pi::timer::spin_sleep;
+use core::time::Duration;
+
+
 /// Error type for `Command` parse failures.
 #[derive(Debug)]
 enum Error {
@@ -44,38 +48,111 @@ impl<'a> Command<'a> {
 /// Starts a shell using `prefix` as the prefix for each line. This function
 /// returns if the `exit` command is called.
 pub fn shell(prefix: &str) -> ! {
-    unimplemented!();
+    //unimplemented!();
+    spin_sleep(Duration::new(5,0));
 
-    // let bell:u8 = 0x7;
-    // let backspace: u8    = 0x8;
-    // let delete: u8   = 127;
-    //
-    //
-    // // /r /n
-    //
-    // loop {
-    //     let mut storage = [0u8; 512];
-    //     let max_length = storage.len();
-    //     let stack = StackVec::new(&mut storage);
-    //
-    //
-    //
-    //
-    //     kprint!("{}", prefix);
-    //     loop{
-    //
-    //             let mut console = CONSOLE.lock();
-    //             let input_byte =console.read_byte();
-    //
-    //
-    //             if byte == b'\r' || byte == b'\n' {
-    //                 //enter
-    //
-    //
-    //
-    //             } else {
-    //
-    //             }
+    let bell:u8 = 7;
+    let backspace: u8    = 8;
+    let delete: u8   = 127;
+
+        
+
+    
+    
+    
+    // /r /n
+    //loop through entire script
+    loop {
+        let mut storage = [0u8; 512];
+        let max_length = storage.len();
+        let mut stack = StackVec::new(&mut storage);
+    
+        let current_length = 0;
+    
+         // prints > prefix
+        kprint!("{} ", prefix);
+         
+        //let mut console1 = CONSOLE.lock();
+        //console.write_byte(b'\n');
+        //loop through each line
+        loop{
+    
+                let mut console = CONSOLE.lock();
+                let input_byte = console.read_byte();
+                //let x = CONSOLE.lock();
+                //console.write_byte(input_byte);
+                //debug //kprint
+                if input_byte == b'\r' || input_byte == b'\n' {
+                    //enter
+                    let mut str_buffer: [&str; 64] = ["";64];
+                    match Command::parse(core::str::from_utf8(stack.into_slice()).unwrap(), &mut str_buffer) {
+                        Ok(a) => {
+                            if a.path() == "echo" {
+                                //kprintln!("{:?}",a.args[1..args.len]);
+                                let mut x  = 1;
+                                kprintln!("{}","");
+                                for each in a.args {
+                                    if(x==1){
+                                        x=2;
+                                        continue;
+                                    }
+                                    kprint!("{}", each);
+                                }
+                                kprintln!("{}","");
+                            } else {
+                                kprintln!("{}","");
+                                kprintln!("unknown command: {}", a.path());
+
+                            }
+                            break;
+                        },
+                        Err(Error::TooManyArgs) => {
+                            kprintln!("{}","");
+                            kprintln!("{}","error: too many arguments");
+                            break;
+                        },
+                        Err(Error::Empty) => {
+                            kprintln!("{}","");
+                            break;
+                        }
+
+
+                    }
+    
+                } else if input_byte == delete || input_byte == backspace {
+
+                    match stack.pop() {
+                        None => {
+                            console.write_byte(bell);
+                        }
+                        Some(a) => {
+                            kprint!("{}{}{}", "\u{8}"," ", backspace as char);
+                        }
+                    };
+                    
+
+
+
+                } else {
+                    
+
+                    if input_byte > 127 {
+                        console.write_byte(bell);
+                    } else {
+                        
+                        match stack.push(input_byte) {
+                            Ok(())=> {
+                            
+                                kprint!("{}",input_byte as char);    
+
+                            }, 
+                            Err(())=> {
+                                kprint!("{}","\u{7}");    
+                                    
+                            },
+                        }
+                    }
+                }
 
 
 
@@ -83,17 +160,17 @@ pub fn shell(prefix: &str) -> ! {
 
 
 
-    //
-    //     }
-    //
-    //
-    //
-    //
-    //
-    // }
-    //
-    //
-    // if()
+    
+        }
+    
+    
+        
+    
+    
+    }
+    
+    
+    
 
 
 }

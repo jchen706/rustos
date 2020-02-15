@@ -245,7 +245,7 @@ impl<T: io::Read + io::Write> Xmodem<T> {
     /// An error of kind `UnexpectedEof` is returned if `buf.len() < 128`.
     pub fn read_packet(&mut self, buf: &mut [u8]) -> io::Result<usize> {
 
-        println!("{}", "read");
+        //println!("{}", "read");
 
         if buf.len() < 128 {
             return ioerr!(UnexpectedEof, "Unexpected EOF");

@@ -10,6 +10,8 @@ mod init;
 use xmodem::Xmodem;
 use core::time::Duration;
 use pi;
+use pi::uart::MiniUart;
+
 
 /// Start address of the binary to load and of the bootloader.
 const BINARY_START_ADDR: usize = 0x80000;
@@ -31,4 +33,28 @@ unsafe fn jump_to(addr: *mut u8) -> ! {
 
 fn kmain() -> ! {
     // FIXME: Implement the bootloader.
+    //receive transmission from uart
+    let mut m = MiniUart::new();
+    m.set_read_timeout(Duration::from_millis(750));
+
+    //continously initiate modem by setting 750ms 
+    let mut slicemem =  unsafe {core::slice::from_raw_parts_mut(BINARY_START, MAX_BINARY_SIZE)};
+
+
+    loop {
+       match Xmodem::receive(&mut m,&mut slicemem) {
+           Ok(_) => {
+               break;
+           },
+           Err(_x) => {              
+               continue;
+           }
+       }
+    };
+    unsafe {
+    jump_to(BINARY_START)
+    }
+
+
+
 }

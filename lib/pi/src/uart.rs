@@ -79,13 +79,15 @@ impl MiniUart {
         // FIXME: Implement remaining mini UART initialization.
         //unimplemented!();
 
-        registers.AUX_MU_LCR_REG.write(0b11); //enable first 2 bits
-
         registers.AUX_MU_BAUD_REG.write(270);
+
         Gpio::new(14).into_alt(Function::Alt5);
         Gpio::new(15).into_alt(Function::Alt5);
 
-        registers.AUX_MU_CNTL_REG.write(0b11);
+        registers.AUX_MU_LCR_REG.or_mask(0b11); //enable first 2 bits
+        registers.AUX_MU_CNTL_REG.or_mask(0b11);
+        registers.AUX_MU_IIR_REG.or_mask(0b11 << 1);
+
 
         MiniUart {
             registers: registers,

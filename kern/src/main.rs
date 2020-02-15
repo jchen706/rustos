@@ -15,6 +15,7 @@ pub mod mutex;
 pub mod shell;
 
 use console::kprintln;
+use console::kprint;
 
 // FIXME: You need to add dependencies here to
 // test your drivers (Phase 2). Add them as needed.
@@ -24,6 +25,8 @@ use pi::timer::spin_sleep;
 use core::time::Duration;
 use pi::gpio::Gpio;
 use pi::uart::MiniUart;
+
+use crate::shell::shell;
 
 
 
@@ -44,7 +47,7 @@ fn kmain() -> ! {
 
     //Gpio::new(15).into_output();
     //GPIO_FSEL1.write_volatile(GPIO_FSEL1.read_volatile() | (1<<18));
-    let mut m = MiniUart::new();
+    //let mut m = MiniUart::new();
 
     loop {
         //GPIO_SET0.write_volatile(GPIO_SET0.read_volatile() | (1<<16));
@@ -53,12 +56,14 @@ fn kmain() -> ! {
         // test1.clear();
         // GPIO_CLR0.write_volatile(GPIO_CLR0.read_volatile() | (1<<16));
         // spin_sleep(Duration::new(1,0));
-        let byte = m.read_byte();
-
-        m.write_byte(byte);
-        m.write_str("<-");
-
-
+        //let byte = m.read_byte();
+        //kprintln!("{} receive", byte);
+        //kprint!("good");
+        //m.write_byte(byte);
+        //spin_sleep(Duration::new(6,0));
+        //kprintln!("{}","Start");
+        shell(">");
+        
 
 
     }
