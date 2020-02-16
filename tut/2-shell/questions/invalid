@@ -1,0 +1,6 @@
+Struct opt reject invalid values through the parse which allows for
+custom methods to parse the argument pass into struct opts. Struct opts
+defines the properties short, long, parser, help, default values. In the custom 
+parser, match is define to return Ok or Err depending on the range or type of values passed in.
+So the Struct opt regnonizes the custom parser the checks for the validity of the argument including the 
+struct own required properties. 

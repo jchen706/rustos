@@ -1,0 +1,4 @@
+In a Xmodem protocal that we used, we need the downloader to send a NAK and the uploader to receive the NAK and send a SOH. Between these acknowledgement, packets 
+can get lost or SOH or NAK can also get lost in the protocal. So resending the current byte by the downloader or sender provides a safety net to 
+make sure all packets arrived, and nothing is missing. Bytes can get lost through disconnection or bad connection or just a voltage shortage, so the transmitter 
+will stall. In addition, if alot of bytes are sent, it takes time for the bytes to be processed and written and read, so there is also a propagation delay.

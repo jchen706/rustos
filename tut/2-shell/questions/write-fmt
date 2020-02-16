@@ -1,0 +1,3 @@
+The write_fmt is call from the console variable which is MutexGuard<Console>, but Rust automatically dereferences 
+the the variable to the inner type which is the Console that has the fmt::wrtie implemenation which is use for this 
+write_fmt and _print method.

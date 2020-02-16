@@ -1,5 +1,5 @@
 We need to change the GPIO_FSEL1 to function select register 2 which is
 GPIO_FSEL2 = 0x7E200008.
-For GPIO_FSEL2.write_volatile(1<<21) to select the GPIO pin 27. Then we willl need
-to GPIO_SET0.write_volatile(1<<27) and  GPIO_CLR0.write_volatile(1<<27);
+For GPIO_FSEL2.write_volatile(GPIO_FSEL2.read_volatile() |1<<21) to select the GPIO pin 27. Then we willl need
+to GPIO_SET0.write_volatile(GPIO_SET0.read_volatile() |1<<27) and  GPIO_CLR0.write_volatile(GPIO_CLR0.read_volatile() |1<<27);
 The physical pin that maps to GPIO pin 27 is pin 13.

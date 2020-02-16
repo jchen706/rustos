@@ -1,0 +1,5 @@
+If the user set the initial state it may not be able to accept the 
+real state if the user try to use it. The user will have to read the gpio register to check its state
+and use it accordingly from the fake state. This cause more reads operations.
+
+

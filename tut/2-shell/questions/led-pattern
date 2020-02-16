@@ -1,0 +1,6 @@
+The led pattern that I choose is to blink each light one second at a time.
+So one led will of Gpio 5 will blink for one second, then clear. 
+After than Gpio 6 will blink for second and cleared. Then Gpio 13 will
+blink for a second and clear. Gpio 19 will blink for second and clear for a second.
+Lastly in the loop, Gpio 26 will blink for a second and clear for a second before 
+Gpio 5 will blink again.

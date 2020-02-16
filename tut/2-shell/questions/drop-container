@@ -1,0 +1,6 @@
+If we return &mut T, we also need to provide a lifetime to ensure the value will be drop from the current function that returns the value.
+With a container, the ownership of &mut T depends on the container. If the container implements copy or clone traits,
+the value within the wrapper will be copy or clone to another mutable reference without violating rust borrowing rules.
+With containers we can customize when to drop it or how the internal wrapper value moves in the heap. With a container,
+we can have more than one mutable reference within a immutable wrapper and drop when the last reference is drop.
+ 

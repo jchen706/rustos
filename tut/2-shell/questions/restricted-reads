@@ -1,0 +1,3 @@
+We set CLO and CHI to ReadVolatile which only allows read access to the pointer mapped to the register. Read only register only implements the 
+read register. There is not a write function  implemented in ReadVolatile so we can't write
+to the register.

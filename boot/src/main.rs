@@ -11,6 +11,9 @@ use xmodem::Xmodem;
 use core::time::Duration;
 use pi;
 use pi::uart::MiniUart;
+use pi::gpio::Gpio;
+
+use pi::timer::spin_sleep;
 
 
 /// Start address of the binary to load and of the bootloader.
@@ -39,11 +42,21 @@ fn kmain() -> ! {
 
     //continously initiate modem by setting 750ms 
     let mut slicemem =  unsafe {core::slice::from_raw_parts_mut(BINARY_START, MAX_BINARY_SIZE)};
+    
+    //let mut test1 = Gpio::new(16).into_output();
 
 
     loop {
        match Xmodem::receive(&mut m,&mut slicemem) {
            Ok(_) => {
+               //test1.set();
+               //spin_sleep(Duration::new(1,0));
+
+               //test1.clear();
+               //spin_sleep(Duration::new(1,0));
+
+
+
                break;
            },
            Err(_x) => {              

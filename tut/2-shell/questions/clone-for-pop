@@ -1,0 +1,4 @@
+T:Clone is required for pop because the StackVec pop returns the underlying value of T. We also are remove the value from 
+the StackVec so we can't return a reference to it by lifetime. In Vec<T>, once pop, the Vec<T> 
+implements the resize method for reallocating the memory which implements the Clone to pass the values. 
+If the bound is removed, the cloned value will be drop within the scope of the drop function.

@@ -1,2 +1,5 @@
 Bound is required because the Rust only lets a initialize variable to live within
-the scope of the function definition. If bound was not enforce
+the scope of the function definition. If bound was not enforce the StackVec will still be used 
+in the main scope of the program while the internal data T is dropped by the scope of the struct.
+Rust does not allow variables to become null. Bounds check help prevent necessary values being 
+dropped. 

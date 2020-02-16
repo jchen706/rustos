@@ -1,0 +1,4 @@
+The shell makes use of StackVec<T> to store the the user type characters, and StackVec is used by the Command to parse the arguments.
+The console is a wrapper for the MiniUart which is used to read from the PI and write to the UART device on the CP2102 USB.
+With the console, we are able to read and print to the console when a user types a character A timer was used to prevent the no prefix at start up. The Gpio registers for TXD and RXD was used for 
+the serial communcation between the UART on the PI and the USB. 

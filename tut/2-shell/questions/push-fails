@@ -1,3 +1,5 @@
 Vec::push is based on a operation system support which allows the user not have
-to track the memory.
-StackVec::push fails if all memory is already allocated, no memory left to allocate.
+to track the memory. Vec will allocate memory on the heap. It is dynamically resized.
+StackVec::push fails if all memory is already allocated, no memory left to allocate. The StackVec
+has a constant size and does not resize because our current os does not support
+internal malloc.

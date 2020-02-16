@@ -42,15 +42,49 @@ use crate::shell::shell;
 fn kmain() -> ! {
     // FIXME: Start the shell.
     //
-    //let mut test1 = Gpio::new(16).into_output();
+
+    //Gpio::Tests
+    // let mut test1 = Gpio::new(5).into_output();
+    // let mut test2 = Gpio::new(6).into_output();
+    // let mut test3 = Gpio::new(13).into_output();
+    // let mut test4 = Gpio::new(19).into_output();
+    // let mut test5 = Gpio::new(26).into_output();
+
 
 
     //Gpio::new(15).into_output();
-    //GPIO_FSEL1.write_volatile(GPIO_FSEL1.read_volatile() | (1<<18));
+
+    
     //let mut m = MiniUart::new();
 
     loop {
-        //GPIO_SET0.write_volatile(GPIO_SET0.read_volatile() | (1<<16));
+        //gpio tests
+
+        // test1.set();
+        // spin_sleep(Duration::new(1,0));
+        // test1.clear();
+        
+        // test2.set();
+        // spin_sleep(Duration::new(1,0));
+        // test2.clear();
+
+        // test3.set();
+        // spin_sleep(Duration::new(1,0));
+        // test3.clear();
+
+        // test4.set();
+        // spin_sleep(Duration::new(1,0));
+        // test4.clear();
+
+        // test5.set();
+        // spin_sleep(Duration::new(1,0));
+        // test5.clear();
+       
+
+
+
+
+
         // test1.set();
         // spin_sleep(Duration::new(1,0));
         // test1.clear();
@@ -60,8 +94,10 @@ fn kmain() -> ! {
         //kprintln!("{} receive", byte);
         //kprint!("good");
         //m.write_byte(byte);
-        //spin_sleep(Duration::new(6,0));
         //kprintln!("{}","Start");
+
+        spin_sleep(Duration::new(7,0));
+
         shell(">");
         
 

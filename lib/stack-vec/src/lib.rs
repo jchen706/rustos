@@ -145,7 +145,7 @@ impl<'a, T: Clone + 'a> StackVec<'a, T> {
     }
 }
 
-// FIXME: Implement `Deref`, `DerefMut`, and `IntoIterator` for `StackVec`.
+//FIXME: Implement `Deref`, `DerefMut`, and `IntoIterator` for `StackVec`.
 impl<'a, T: 'a> Deref for StackVec<'a, T> {
     type Target  = [T];
 

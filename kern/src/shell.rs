@@ -49,9 +49,9 @@ impl<'a> Command<'a> {
 /// returns if the `exit` command is called.
 pub fn shell(prefix: &str) -> ! {
     //unimplemented!();
-    spin_sleep(Duration::new(5,0));
+    //spin_sleep(Duration::new(5,0));
 
-    let bell:u8 = 7;
+    let bell:u8 = 0x7;
     let backspace: u8    = 8;
     let delete: u8   = 127;
 
@@ -67,8 +67,8 @@ pub fn shell(prefix: &str) -> ! {
         let max_length = storage.len();
         let mut stack = StackVec::new(&mut storage);
     
-        let current_length = 0;
-    
+        //let current_length = 0;
+        
          // prints > prefix
         kprint!("{} ", prefix);
          
@@ -90,29 +90,29 @@ pub fn shell(prefix: &str) -> ! {
                             if a.path() == "echo" {
                                 //kprintln!("{:?}",a.args[1..args.len]);
                                 let mut x  = 1;
-                                kprintln!("{}","");
+                                 kprint!("{}","\r\n");
                                 for each in a.args {
-                                    if(x==1){
+                                    if x==1{
                                         x=2;
                                         continue;
                                     }
-                                    kprint!("{}", each);
+                                    kprint!("{} ", each);
                                 }
-                                kprintln!("{}","");
+                                kprint!("{}","\r\n");
                             } else {
-                                kprintln!("{}","");
+                                kprint!("{}","\r\n");
                                 kprintln!("unknown command: {}", a.path());
 
                             }
                             break;
                         },
                         Err(Error::TooManyArgs) => {
-                            kprintln!("{}","");
+                            kprint!("{}","\r\n");
                             kprintln!("{}","error: too many arguments");
                             break;
                         },
                         Err(Error::Empty) => {
-                            kprintln!("{}","");
+                            kprint!("{}","\r\n");
                             break;
                         }
 
@@ -123,7 +123,7 @@ pub fn shell(prefix: &str) -> ! {
 
                     match stack.pop() {
                         None => {
-                            console.write_byte(bell);
+                            kprint!("{}",bell as char);    
                         }
                         Some(a) => {
                             kprint!("{}{}{}", "\u{8}"," ", backspace as char);
@@ -137,17 +137,17 @@ pub fn shell(prefix: &str) -> ! {
                     
 
                     if input_byte > 127 {
-                        console.write_byte(bell);
+                            kprint!("{}",bell as char);    
                     } else {
                         
                         match stack.push(input_byte) {
-                            Ok(())=> {
-                            
+                            Ok(())=> {  
+
                                 kprint!("{}",input_byte as char);    
 
                             }, 
                             Err(())=> {
-                                kprint!("{}","\u{7}");    
+                                kprint!("{}",bell as char);    
                                     
                             },
                         }
@@ -164,13 +164,6 @@ pub fn shell(prefix: &str) -> ! {
         }
     
     
-        
-    
-    
     }
     
-    
-    
-
-
 }

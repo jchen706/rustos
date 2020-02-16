@@ -1,0 +1,8 @@
+ The -r enable or disable the XModem usage or just send the data in raw because it is more efficent
+ to send just small amount of bytes in raw rather going through all the ackowledgments in xmodem protocol. 
+
+XMODEM protocol expect the downloader to NAK the sender. If there is not a NAK to the sender, then the sender will
+have to keep transmitting the NAK until a SOH is received. In test.sh, 
+the input and output are checked which is similar to checksum of packets in Xmodem.
+Xmodem expects a end of transmission, EOT from uploader, NAK form downloader, EOT from uploader,
+ACK from downloader. 

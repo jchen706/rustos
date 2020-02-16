@@ -1,0 +1,6 @@
+Deref allows for &T, and DerefMut allows for &mut T.
+DerefMut allows for push and pop from the StackVec<T>.
+Deref allows to access the properties of the StackVec<T>, the capacity, length, and pointer location.
+Deref is immutable read. For the test cases Deref allows for the len and capacity check.
+Then DerefMut will fail the mut_indexing test if not implemented because mut_indexing changes the values of the StackVec.
+Deref is need for all the tests for indexing like stack_vec[1] and assert_eq! checkings.
