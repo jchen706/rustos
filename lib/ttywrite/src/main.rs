@@ -61,13 +61,13 @@ fn main() {
     settings.set_stop_bits(opt.stop_bits);
     settings.set_flow_control(opt.flow_control);
     settings.set_char_size(opt.char_width);
-    settings.set_baud_rate(opt.baud_rate);
+    settings.set_baud_rate(opt.baud_rate).expect("Baud rate to be set");
 
 
-    port.write_settings(&settings);
+    port.write_settings(&settings).expect("Write Settings");
 
 
-    port.set_timeout(Duration::new(opt.timeout, 0));
+    port.set_timeout(Duration::new(opt.timeout, 0)).expect("set port timeout ");
 
 
     // let stdinorinput:Box = match opt.input {
@@ -85,11 +85,11 @@ fn main() {
             Some(path) => {
                 let f = File::open(path).unwrap();
                 let mut reader = BufReader::new(f);
-                io::copy(&mut reader, &mut port );
+                io::copy(&mut reader, &mut port ).expect("io copy with path");
             }
             None => {
                 let mut reader = io::stdin();
-                io::copy(&mut reader, &mut port);
+                io::copy(&mut reader, &mut port).expect("io copy with no path");
             }
 
         }
@@ -99,11 +99,11 @@ fn main() {
             Some(path) => {
                 let f = File::open(path).unwrap();
                 let mut reader = BufReader::new(f);
-                Xmodem::transmit_with_progress(reader, &mut port, progress_fn);
+                Xmodem::transmit_with_progress(reader, &mut port, progress_fn).expect("Xmodem transmisiion with a path");
             }
             None => {
                 let mut reader = io::stdin();
-                Xmodem::transmit_with_progress(reader, &mut port, progress_fn);
+                Xmodem::transmit_with_progress(reader, &mut port, progress_fn).expect("Xmodem with None opt.input");
             }
 
         }
