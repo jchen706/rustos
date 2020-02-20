@@ -55,7 +55,7 @@ fn kmain() -> ! {
 
 
 
-    fn kmain() -> ! {
+    
         // FIXME: Start the shell.
         //
 
@@ -114,6 +114,7 @@ fn kmain() -> ! {
 
             spin_sleep(Duration::new(7,0));
 
-    kprintln!("Welcome to cs3210!");
-    shell::shell("> ");
+            kprintln!("Welcome to cs3210!");
+            shell::shell("> ");
+        }
 }
