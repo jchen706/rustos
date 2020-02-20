@@ -1,6 +1,16 @@
+use shim::io;
+use shim::path::{Path, PathBuf};
+
 use stack_vec::StackVec;
 
+use pi::atags::Atags;
+
+use fat32::traits::FileSystem;
+use fat32::traits::{Dir, Entry};
+
 use crate::console::{kprint, kprintln, CONSOLE};
+use crate::ALLOCATOR;
+use crate::FILESYSTEM;
 
 use pi::timer::spin_sleep;
 use core::time::Duration;
@@ -46,7 +56,7 @@ impl<'a> Command<'a> {
 }
 
 /// Starts a shell using `prefix` as the prefix for each line. This function
-/// returns if the `exit` command is called.
+/// never returns.
 pub fn shell(prefix: &str) -> ! {
     //unimplemented!();
     //spin_sleep(Duration::new(5,0));
