@@ -24,6 +24,7 @@ pub mod shell;
 use console::kprintln;
 use console::kprint;
 
+
 use allocator::Allocator;
 //use fs::FileSystem;
 
@@ -32,6 +33,10 @@ pub static ALLOCATOR: Allocator = Allocator::uninitialized();
 //pub static FILESYSTEM: FileSystem = FileSystem::uninitialized();
 
 fn kmain() -> ! {
+    
+    spin_sleep(Duration::new(2,0));
+    //panic!("Working Panic");
+
     unsafe {
         ALLOCATOR.initialize();
         //FILESYSTEM.initialize();
@@ -98,7 +103,7 @@ fn kmain() -> ! {
             // spin_sleep(Duration::new(1,0));
             // test5.clear();
 
-
+            
 
 
 
@@ -114,7 +119,7 @@ fn kmain() -> ! {
             //m.write_byte(byte);
             //kprintln!("{}","Start");
 
-            spin_sleep(Duration::new(7,0));
+           
 
             kprintln!("Welcome to cs3210!");
             shell::shell("> ");
