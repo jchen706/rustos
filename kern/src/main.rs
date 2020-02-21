@@ -7,6 +7,8 @@
 #![feature(raw_vec_internals)]
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(not(test), no_main)]
+#![feature(panic_info_message)]
+
 
 #[cfg(not(test))]
 mod init;
@@ -23,16 +25,16 @@ use console::kprintln;
 use console::kprint;
 
 use allocator::Allocator;
-use fs::FileSystem;
+//use fs::FileSystem;
 
 #[cfg_attr(not(test), global_allocator)]
 pub static ALLOCATOR: Allocator = Allocator::uninitialized();
-pub static FILESYSTEM: FileSystem = FileSystem::uninitialized();
+//pub static FILESYSTEM: FileSystem = FileSystem::uninitialized();
 
 fn kmain() -> ! {
     unsafe {
         ALLOCATOR.initialize();
-        FILESYSTEM.initialize();
+        //FILESYSTEM.initialize();
     }
 
     use core::fmt::Write;

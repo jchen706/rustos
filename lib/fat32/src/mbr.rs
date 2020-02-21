@@ -12,7 +12,7 @@ pub struct CHS {
 
 // FIXME: implement Debug for CHS
 
-const_assert_size!(CHS, 3);
+//const_assert_size!(CHS, 3);
 
 #[repr(C, packed)]
 pub struct PartitionEntry {
@@ -21,7 +21,7 @@ pub struct PartitionEntry {
 
 // FIXME: implement Debug for PartitionEntry
 
-const_assert_size!(PartitionEntry, 16);
+//const_assert_size!(PartitionEntry, 16);
 
 /// The master boot record (MBR).
 #[repr(C, packed)]
@@ -31,7 +31,7 @@ pub struct MasterBootRecord {
 
 // FIXME: implemente Debug for MaterBootRecord
 
-const_assert_size!(MasterBootRecord, 512);
+//const_assert_size!(MasterBootRecord, 512);
 
 #[derive(Debug)]
 pub enum Error {
@@ -53,6 +53,6 @@ impl MasterBootRecord {
     /// boot indicator. Returns `Io(err)` if the I/O error `err` occured while
     /// reading the MBR.
     pub fn from<T: BlockDevice>(mut device: T) -> Result<MasterBootRecord, Error> {
-        unimplemented!("MasterBootRecord::from()")
+        unimplemented!("MasterBootRecord::from()");
     }
 }

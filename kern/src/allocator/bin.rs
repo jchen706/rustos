@@ -72,3 +72,8 @@ impl LocalAlloc for Allocator {
 }
 
 // FIXME: Implement `Debug` for `Allocator`.
+impl fmt::Debug for Allocator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_> )-> fmt::Result {
+        Ok(())
+    }
+}
