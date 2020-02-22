@@ -3,6 +3,8 @@ mod raw;
 
 pub use self::atag::*;
 
+
+
 /// The address at which the firmware loads the ATAGS.
 const ATAG_BASE: usize = 0x100;
 
@@ -25,7 +27,88 @@ impl Iterator for Atags {
 
     // FIXME: Implement `Iterator` for `Atags`
     fn next(&mut self) -> Option<Atag> {
-        unimplemented!()
+        //&mut atags::Atags`
+       
+        // match self.ptr {
+        //     Some(None) => return None,
+        // }
+        match self.ptr {
+            None => None,
+            _ => {
+                let curr = self.ptr.unwrap();
+
+        let next = curr.next();
+
+
+        match next {
+                Some(b) => {
+                       self.ptr = Some(b);
+                       Some(Atag::from(curr))
+               
+                },
+                None => {
+                        self.ptr = None;
+                        Some(Atag::from(curr))
+
+                },
+                    
+                _ => {
+                 None
+
+                }
+        }
+
+
+
+            }
+        }
+        
+                 
+
+
+
+        // match curr {
+        //      => {
+        //         self.ptr = Some(Atag::from(1));
+        //         Some(Atag::from(curr))
+        //     }
+        //     _ => match next {
+        //             Some(b) => {
+        //                 self.ptr = Some(b);
+        //                 Some(Atag::from(curr))
+               
+        //             },
+        //      // None => {match self.ptr {
+        //      //            Some(Atag::None) => {
+        //      //                Some(Atag::from(curr))
+        //      //            }
+        //      //            _=> {
+        //      //                None
+        //      //            }
+        //      //        }
+        //      //    },
+        //         _ => {
+        //             None
+
+        //         }
+        //         } 
+
+        // }
+
+        
+        //Some(Atag::from(a))
+        //let c = self.next();
+        //Some(Atag::from(curr.unwrap()))
+        //next().unwrap();
+       
+        //let x = Atags::get().ptr;
+
+            
+           
+
+        
+
+
     }
 }
 
@@ -34,7 +117,7 @@ mod test {
     use super::{raw, Atag, Atags};
 
     const MEM: [u32; 23] = [
-        // CORE
+        // // CORE
         5,
         raw::Atag::CORE,
         1,
@@ -60,7 +143,7 @@ mod test {
         123,
         456,
         789,
-        // NONE
+        // // NONE
         2,
         raw::Atag::NONE,
     ];

@@ -24,7 +24,7 @@ impl Atag {
             let tagaddress = self as *const Atag as *const u32;
            
              if self.tag == Atag::NONE {
-                 None
+                None
              } else {
 
                  let len = self.dwords;

@@ -2,6 +2,10 @@ use crate::atags::raw;
 
 pub use crate::atags::raw::{Core, Mem};
 
+
+use core::slice;
+use core::str::from_utf8;
+
 /// An ATAG.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum Atag {
@@ -66,19 +70,21 @@ impl From<&'static raw::Atag> for Atag {
 
                     // cmd is pointer
                     let mut size = 0;
-                    let pointer = &cmd
 
-                    for each in x {
-                        if each == b'\0' {
-                            break;
+                    //pointer to union cmd
+                    let mut pointer:*const u8 = &cmd.cmd;
+                    
+                     
+                        while *pointer != b'\0' {
+                             pointer = pointer.offset(1);
+                             size +=1;
                         }
-                        size++
-                    }
+                        
 
 
-                    let mut x = str::from_utf8(slice::from_raw_parts(cmd));
+                    let mut x = from_utf8(slice::from_raw_parts(&cmd.cmd , size)).unwrap();
 
-                    Atag::Cmd(x[..size])
+                    Atag::Cmd(x)
                 },
                 (raw::Atag::NONE, _) => Atag::None,
                 (id, _) => Atag::Unknown(id),
