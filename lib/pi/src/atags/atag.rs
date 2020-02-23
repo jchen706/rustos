@@ -82,7 +82,7 @@ impl From<&'static raw::Atag> for Atag {
                         
 
 
-                    let mut x = from_utf8(slice::from_raw_parts(&cmd.cmd , size)).unwrap();
+                    let x = from_utf8(slice::from_raw_parts(&cmd.cmd , size)).unwrap();
 
                     Atag::Cmd(x)
                 },

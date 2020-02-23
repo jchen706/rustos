@@ -15,15 +15,21 @@ use crate::allocator::LocalAlloc;
 ///   map_to_bin(size) -> k
 ///   
 
+
+//plan 
+// 1. we need to have start and end nodes 
+//30 bins
+//
 pub struct Allocator {
-    // FIXME: Add the necessary fields.
+    list:[LinkedList::new(); 30],
+    number_bin: usize,
 }
 
 impl Allocator {
     /// Creates a new bin allocator that will allocate memory from the region
     /// starting at address `start` and ending at address `end`.
     pub fn new(start: usize, end: usize) -> Allocator {
-        unimplemented!("bin allocator")
+        
     }
 }
 

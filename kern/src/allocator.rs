@@ -77,8 +77,32 @@ extern "C" {
 pub fn memory_map() -> Option<(usize, usize)> {
     let page_size = 1 << 12;
     let binary_end = unsafe { (&__text_end as *const u8) as usize };
+    
+    //get the tags and find where memory ends as physical memory
 
-    unimplemented!("memory map")
+    let tags = Atags::get();
+
+    for each in tags {
+        match each {
+            Atag::Mem(x) => {
+                let mut start = x.start as usize;
+                let mut end: usize = start + x.size as usize;
+
+
+                return Some((binary_end, end));
+            },
+            Atag::None => {
+                return None;
+            },
+            _=> {
+                continue;
+            }
+
+        }
+    } 
+
+    return None;   
+
 }
 
 impl fmt::Debug for Allocator {

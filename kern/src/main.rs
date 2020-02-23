@@ -23,6 +23,8 @@ pub mod shell;
 
 use console::kprintln;
 use console::kprint;
+use alloc::vec::Vec;
+use alloc::string::String;
 
 
 use allocator::Allocator;
@@ -51,7 +53,7 @@ fn kmain() -> ! {
 
     use crate::shell::shell;
 
-
+    String::from("Hi!");
 
     // const GPIO_BASE: usize = 0x3F000000 + 0x200000;
     //
@@ -80,7 +82,7 @@ fn kmain() -> ! {
 
         //let mut m = MiniUart::new();
 
-        loop {
+        
             //gpio tests
 
             // test1.set();
@@ -123,5 +125,5 @@ fn kmain() -> ! {
 
             kprintln!("Welcome to cs3210!");
             shell::shell("> ");
-        }
+        
 }
