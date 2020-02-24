@@ -18,18 +18,81 @@ use crate::allocator::LocalAlloc;
 
 //plan 
 // 1. we need to have start and end nodes 
-//30 bins
-//
+//32 bins // less calculation
+// n from 3 to k 
+//represent the free memory
+
+
+//global memory is from memory map
 pub struct Allocator {
-    list:[LinkedList::new(); 30],
-    number_bin: usize,
+    list:[LinkedList; 30],
+
+
+    global_start: usize,
+    global_end: usize,
+
+    //what happens when a bin is exhausted
+    total_size:usize
+
+
 }
 
 impl Allocator {
     /// Creates a new bin allocator that will allocate memory from the region
     /// starting at address `start` and ending at address `end`.
     pub fn new(start: usize, end: usize) -> Allocator {
+
+       let size = start - end;
+
+
+       let equal_size = size / 30;
+       
+       let mut list1:[LinkedList; 30] = [LinkedList::new(); 30];
+
+       unsafe {
+            list1[0].push(start as *mut usize);
+       }
+       let mut dummy_start = start;
+
+       unsafe {
+            for i in 1..30 {
+                dummy_start += equal_size;
+                list1[i].push(dummy_start as *mut usize); 
+            }
+        }
+
+       Allocator {
+        list: list1,
+        global_start: start,
+        global_end: end,
+        total_size: size
+
+       }
+       
         
+    }
+
+
+    pub fn map_to_bin(mut size: usize) -> usize {
+
+        let mut count = 0;
+
+        if size <= 8 {
+             0
+        } else {
+
+            while size != 0 {
+                size = size /2;
+                count+=1;
+            }
+
+            count-1
+
+        }
+
+
+
+
     }
 }
 
@@ -56,7 +119,42 @@ impl LocalAlloc for Allocator {
     /// or `layout` does not meet this allocator's
     /// size or alignment constraints.
     unsafe fn alloc(&mut self, layout: Layout) -> *mut u8 {
-        unimplemented!("bin allocator")
+        
+        if (self.total_size < layout.size()) {
+            return core::ptr::null_mut() as *mut u8;
+        }
+
+
+
+        //determine bin from size:
+        let bin_num = Allocator::map_to_bin(layout.size());
+
+      
+        let address =  self.list[bin_num].pop();
+
+        //align the current pointer
+        let align_address = align_up(address.unwrap() as usize, layout.align());
+
+        //find the end of the block of memory
+        let end_address = align_address.saturating_add(layout.size());
+
+        //end can't be more than self.end
+       
+        //start of the new block
+        //let pointer: *mut u8 = (end - layout.size()) as *mut u8;
+
+        //self.current = end;
+
+        println!("{:?}", address);
+
+        address.unwrap() as *mut u8
+
+
+
+
+
+
+
     }
 
     /// Deallocates the memory referenced by `ptr`.
