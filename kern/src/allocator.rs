@@ -15,6 +15,8 @@ use core::fmt;
 use crate::console::kprintln;
 use crate::mutex::Mutex;
 use pi::atags::{Atag, Atags};
+use crate::allocator::util::align_up;
+
 
 /// `LocalAlloc` is an analogous trait to the standard library's `GlobalAlloc`,
 /// but it takes `&mut self` in `alloc()` and `dealloc()`.
@@ -89,7 +91,9 @@ pub fn memory_map() -> Option<(usize, usize)> {
                 let mut end: usize = start + x.size as usize;
 
 
-                return Some((binary_end, end));
+                let y = align_up(binary_end, page_size);
+
+                return Some((y, end));
             },
             Atag::None => {
                 return None;

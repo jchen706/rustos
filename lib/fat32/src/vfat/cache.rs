@@ -88,6 +88,7 @@ impl CachedPartition {
     /// Returns an error if there is an error reading the sector from the disk.
     pub fn get_mut(&mut self, sector: u64) -> io::Result<&mut [u8]> {
         unimplemented!("CachedPartition::get_mut()")
+        
     }
 
     /// Returns a reference to the cached sector `sector`. If the sector is not
