@@ -39,7 +39,22 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
     where
         T: BlockDevice + 'static,
     {
-        unimplemented!("VFat::from()")
+
+        //why phantom data
+
+        //bytes per sector: bpb
+        //sector per cluster: bpb
+        // sectors per fat: bpb
+        // 
+
+        let master_br = MasterBootRecord::from(device)?;
+
+
+        VFat {
+
+
+
+        }
     }
 
     // TODO: The following methods may be useful here:
@@ -52,7 +67,10 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
     //        offset: usize,
     //        buf: &mut [u8]
     //    ) -> io::Result<usize>;
-    //
+    
+
+
+
     //  * A method to read all of the clusters chained from a starting cluster
     //    into a vector.
     //

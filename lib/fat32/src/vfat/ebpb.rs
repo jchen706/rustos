@@ -48,12 +48,16 @@ impl BiosParameterBlock {
     /// If the EBPB signature is invalid, returns an error of `BadSignature`.
     pub fn from<T: BlockDevice>(mut device: T, sector: u64) -> Result<BiosParameterBlock, Error> {
         
-    	let mut buf = [u8, 512];
+    	let mut buf = [0u8; 512];
 
     	let value = device.read(sector, &mut buf)?;
 
+    	if value != 512 {
+    		return Err(Error::Io(io::Error::new(io::ErrorKind::UnexpectedEof, "Device did not read 512 bytes")))
 
-    	let bpb: BiosParameterBlock = unsafe {mem:transmute(value)};
+    	}
+
+    	let bpb: BiosParameterBlock = unsafe {mem:transmute(buf)};
 
     	if bpb.partition_signature != 0xAA55 {
     		return Err(Error::BadSignature);
@@ -66,6 +70,9 @@ impl BiosParameterBlock {
 
 impl fmt::Debug for BiosParameterBlock {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        unimplemented!("BiosParameterBlock::fmt()")
+        f.debug_struct("MasterBootRecord")
+        	.field("partition_signature", &self.partition_signature)
+
+
     }
 }

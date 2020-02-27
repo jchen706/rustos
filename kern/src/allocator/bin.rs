@@ -178,6 +178,15 @@ impl LocalAlloc for Allocator {
             //     return core::ptr::null_mut() as *mut u8;
             // } else {
 
+
+
+                //loop through all the bins
+                //if the bin not empty merge the size
+
+
+
+
+
                 let mut start_addr = align_up(self.relative_start, layout.align());
                
 
@@ -188,6 +197,8 @@ impl LocalAlloc for Allocator {
                 if start_addr > self.global_end {
                    return core::ptr::null_mut() as *mut u8;
                 }
+
+
          
 
                 let end_addr = start_addr.saturating_add(nearest_size);

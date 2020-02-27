@@ -87,7 +87,36 @@ impl CachedPartition {
     ///
     /// Returns an error if there is an error reading the sector from the disk.
     pub fn get_mut(&mut self, sector: u64) -> io::Result<&mut [u8]> {
-        unimplemented!("CachedPartition::get_mut()")
+
+        if !self.cache.contains_key(sector) {
+            
+            let physical_sector = virtual_to_physical(sector);
+            if physical_sector == None {
+                return Err(Error::Io(io::Error::new(io::ErrorKind::InvalidData, "Could not determine physical sector"));
+            }
+
+            //read the entire physical sector
+            //need to find the number of physical sector by the logical sector
+            let num_ps = self.factor();
+            let mut buf:Vec<u8> = Vec::new();
+
+            for i in 0..num_ps {
+                let value = self.device.read_sector(physical_sector + i, &mut buf)?;
+            } 
+
+            self.cache.insert(sector, CacheEntry {data:buf, dirty: true});
+
+            let mut data1 = buf[..];
+            Ok(&mut data1)
+        } else {
+            let mut cacheentry = self.cache.get_mut(sector).unwrap();
+            cacheentry.dirty = true
+            let mut data1 = cacheentry.data[..];
+
+            // convert vec<u8> to [u8]
+            Ok(&mut data1)
+        }
+        
         
     }
 
@@ -98,23 +127,72 @@ impl CachedPartition {
     ///
     /// Returns an error if there is an error reading the sector from the disk.
     pub fn get(&mut self, sector: u64) -> io::Result<&[u8]> {
-        unimplemented!("CachedPartition::get()")
+        
+        if !self.cache.contains_key(sector) {
+            
+            let physical_sector = virtual_to_physical(sector);
+            if physical_sector == None {
+                return Err(Error::Io(io::Error::new(io::ErrorKind::InvalidData, "Could not determine physical sector"));
+            }
+
+            //read the entire physical sector
+            //need to find the number of physical sector by the logical sector
+            let num_ps = self.factor();
+            let mut buf:Vec<u8> = Vec::new();
+
+            for i in 0..num_ps {
+                let value = self.device.read_sector(physical_sector + i, &mut buf)?;
+            } 
+
+            self.cache.insert(sector, CacheEntry {data:buf, dirty: true});
+
+            let data1 = buf[..];
+            Ok(&data1)
+        } else {
+            let mut cacheentry = self.cache.get(sector).unwrap();
+            cacheentry.dirty = true
+            let data1 = cacheentry.data[..];
+
+            // convert vec<u8> to [u8]
+            Ok(&data1)
+        }
+        
     }
+
+
+    //pub fn read_disk(&mut self, sector: u64) -> 
+
+
+
+
 }
 
 // FIXME: Implement `BlockDevice` for `CacheDevice`. The `read_sector` and
 // `write_sector` methods should only read/write from/to cached sectors.
 impl BlockDevice for CachedPartition {
     fn sector_size(&self) -> u64 {
-        unimplemented!()
+        self.partition.sector_size
     }
 
     fn read_sector(&mut self, sector: u64, buf: &mut [u8]) -> io::Result<usize> {
-        unimplemented!()
+        //read sector
+        let value = self.get(sector)?;
+
+        //needs to read from cache
+        buf = value;
+        Ok(buf.len())
+        
+
     }
 
     fn write_sector(&mut self, sector: u64, buf: &[u8]) -> io::Result<usize> {
-        unimplemented!()
+        let mut value = self.get_mut(sector)?;
+
+
+        //needs to write into the cache
+        value = buf;
+        Ok(buf.len())
+
     }
 }
 

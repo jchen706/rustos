@@ -1,6 +1,7 @@
 use core::fmt;
 use shim::const_assert_size;
 use shim::io;
+use core::mem;
 
 use crate::traits::BlockDevice;
 
@@ -25,8 +26,8 @@ impl CHS {
     pub fn get_cylinder(&self) -> u16 {
 
         //bits 9 and 8
-        let mut upper = (self.cylinder_sector & 0b11000000) as u16) << 2;
-        self.cylinder | upper
+        let mut upper = ((self.cylinder_sector & 0b11000000) as u16) << 2;
+        self.cylinder as u16 | upper
     }
 
     pub fn get_sector(&self)->u8 {
@@ -71,10 +72,10 @@ impl PartitionEntry {
 
 
     pub fn get_bootflag(&self)-> bool {
-        if status == 0 {
+        if self.status == 0 {
             false
         } else {
-            if status == 0x80 {
+            if self.status == 0x80 {
                 return true;   
             }
             false
@@ -95,8 +96,8 @@ impl PartitionEntry {
 impl fmt::Debug for PartitionEntry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("PartitionEntry")
-            .field("status", &self.get_status())
-            .field("first_chs", &self.head)
+            .field("status", &self.status)
+            .field("first_chs", &self.first_chs)
             .field("partition_type", &self.partition_type)
             .field("last_chs", &self.last_chs)
             .field("relative_sector", &self.relative_sector)
@@ -118,10 +119,10 @@ pub struct MasterBootRecord {
 
 // FIXME: implemente Debug for MaterBootRecord
 
-impl fmt::Debug for PartitionEntry {
+impl fmt::Debug for MasterBootRecord {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("MasterBootRecord")
-            .field("bootstrap", &self.bootstrap)
+            //.field("bootstrap", &self.bootstrap)
             .field("unique_id", &self.unique_id)
             .field("partition_table", &self.partition_table)
             .field("signature", &self.signature)
@@ -142,6 +143,12 @@ pub enum Error {
     BadSignature,
 }
 
+impl From<io::Error> for Error {
+    fn from (error: io::Error)-> Self {
+        Error::Io(error)
+    }
+}
+
 impl MasterBootRecord {
     /// Reads and returns the master boot record (MBR) from `device`.
     ///
@@ -152,14 +159,20 @@ impl MasterBootRecord {
     /// boot indicator. Returns `Io(err)` if the I/O error `err` occured while
     /// reading the MBR.
     pub fn from<T: BlockDevice>(mut device: T) -> Result<MasterBootRecord, Error> {
-        let mut sector = [u8; 512];
+        let mut sector = [0u8; 512];
 
         let value = device.read_sector(0, &mut sector)?;
+
+        //println!("{:?}",value);
+        const size: usize = 512;
+        if value != size {
+            return Err(Error::Io(io::Error::new(io::ErrorKind::UnexpectedEof, "Device did not read 512 bytes")))
+        } else {
 
 
         //io Error
 
-        let mbr: MasterBootRecord = unsafe{mem::transmute(value)};
+        let mbr: MasterBootRecord = unsafe{mem::transmute(sector)};
 
         if mbr.signature != 0xAA55 {
             return Err(Error::BadSignature);
@@ -172,18 +185,8 @@ impl MasterBootRecord {
         }
 
 
-
-        
-
-
-
         Ok(mbr)
-
-
-
-
-
-
+    }
 
     }
 }
