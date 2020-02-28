@@ -179,7 +179,8 @@ impl BlockDevice for CachedPartition {
         let value = self.get(sector)?;
 
         //needs to read from cache
-        buf = value;
+        buf[..].copy_from_slice(value[..]);
+        
         Ok(buf.len())
         
 

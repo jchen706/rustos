@@ -8,10 +8,10 @@ use crate::vfat::Error;
 pub struct BiosParameterBlock {
     jmp_short_xx_nop: [u8; 3],
     oem_identifier: [u8; 8],
-    bytes_per_sector: [u8; 2],
+    bytes_per_sector: u16,
     sector_per_cluster: u8,
-    reserved_sector: [u8;2],
-    fat: u8,
+    reserved_sector: u16,
+    number_fat: u8,
     directory_entries: [u8;2],
     total_logical_sectors: [u8;2],
     fat_id : u8,
@@ -20,10 +20,12 @@ pub struct BiosParameterBlock {
     heads_str_media: [u8;2],
     hidden_sectors: [u8;4],
     logical_sectors: [u8;4],
-    size_FAT_sectors: [u8;4],
+
+
+    size_FAT_sectors: u32,
     flags: [u8;2],
     version_number: [u8;2],
-    root_cluster: [u8;4],
+    root_cluster: u32,
     fsinfo_struct_sec: [u8;2],
     backup_boot_sec: : [u8;2],
     reserved_vol: [u8;12],

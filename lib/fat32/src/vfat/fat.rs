@@ -25,7 +25,26 @@ pub struct FatEntry(pub u32);
 impl FatEntry {
     /// Returns the `Status` of the FAT entry `self`.
     pub fn status(&self) -> Status {
-        unimplemented!("FatEntry::status()")
+        
+
+        let num: u32 = self.0;
+        //set the ingore four bit to 0
+        let mut num2: u32 = num & (!(!0 <<(28)));
+
+
+        if num2 == 0 {
+            return Status::Free;
+        } else if num2 == 1 {
+            return Status::Reserved;
+        } else if num2 >= 2 && num2 <= 0x0FFFFFEF{
+            return Status::Data(Cluster(num));
+        } else if num2 >= 0x0FFFFFF0 && num <= 0x0FFFFFF6{
+            return Status::Reserved;
+        } else if num2 == 0x0FFFFFF7 {
+            return Status::Bad;
+        } else if  num2 >= 0x0FFFFFF8 && num <= 0x0FFFFFFf {
+            return Status::Eoc(num);
+        } 
     }
 }
 
