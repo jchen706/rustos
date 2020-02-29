@@ -44,7 +44,10 @@ impl FatEntry {
             return Status::Bad;
         } else if  num2 >= 0x0FFFFFF8 && num <= 0x0FFFFFFf {
             return Status::Eoc(num);
-        } 
+        } else {
+            return Status::Bad;
+
+        }
     }
 }
 

@@ -88,30 +88,38 @@ impl CachedPartition {
     /// Returns an error if there is an error reading the sector from the disk.
     pub fn get_mut(&mut self, sector: u64) -> io::Result<&mut [u8]> {
 
-        if !self.cache.contains_key(sector) {
+        if !self.cache.contains_key(&sector) {
             
             let physical_sector = virtual_to_physical(sector);
-            if physical_sector == None {
-                return Err(Error::Io(io::Error::new(io::ErrorKind::InvalidData, "Could not determine physical sector"));
-            }
 
-            //read the entire physical sector
-            //need to find the number of physical sector by the logical sector
-            let num_ps = self.factor();
+            match physical_sector {
+                None => {
+                return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not determine physical sector"));
+                },
+                Some(x) => {
+
+                     let num_ps = self.factor();
             let mut buf:Vec<u8> = Vec::new();
 
             for i in 0..num_ps {
-                let value = self.device.read_sector(physical_sector + i, &mut buf)?;
+                let value = self.device.read_sector(x + i, &mut buf)?;
             } 
 
             self.cache.insert(sector, CacheEntry {data:buf, dirty: true});
 
-            let mut data1 = buf[..];
+            let mut data1 = &buf[..];
             Ok(&mut data1)
+
+                }
+
+            }
+            //read the entire physical sector
+            //need to find the number of physical sector by the logical sector
+           
         } else {
-            let mut cacheentry = self.cache.get_mut(sector).unwrap();
-            cacheentry.dirty = true
-            let mut data1 = cacheentry.data[..];
+            let mut cacheentry = self.cache.get_mut(&sector).unwrap();
+            cacheentry.dirty = true;
+            let mut data1 = &cacheentry.data[..];
 
             // convert vec<u8> to [u8]
             Ok(&mut data1)
@@ -128,11 +136,11 @@ impl CachedPartition {
     /// Returns an error if there is an error reading the sector from the disk.
     pub fn get(&mut self, sector: u64) -> io::Result<&[u8]> {
         
-        if !self.cache.contains_key(sector) {
+        if !self.cache.contains_key(&sector) {
             
-            let physical_sector = virtual_to_physical(sector);
+            let physical_sector = virtual_to_physical(sector).unwrap();
             if physical_sector == None {
-                return Err(Error::Io(io::Error::new(io::ErrorKind::InvalidData, "Could not determine physical sector"));
+                return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not determine physical sector"));
             }
 
             //read the entire physical sector
@@ -144,14 +152,14 @@ impl CachedPartition {
                 let value = self.device.read_sector(physical_sector + i, &mut buf)?;
             } 
 
-            self.cache.insert(sector, CacheEntry {data:buf, dirty: true});
+            self.cache.insert(sector, CacheEntry {data:buf, dirty: false});
 
-            let data1 = buf[..];
-            Ok(&data1)
+            let data1 = &buf[..];
+            Ok(data1)
         } else {
-            let mut cacheentry = self.cache.get(sector).unwrap();
-            cacheentry.dirty = true
-            let data1 = cacheentry.data[..];
+            let mut cacheentry = self.cache.get(&sector).unwrap();
+            //cacheentry.dirty = true
+            let data1 = &cacheentry.data[..];
 
             // convert vec<u8> to [u8]
             Ok(&data1)
@@ -176,10 +184,10 @@ impl BlockDevice for CachedPartition {
 
     fn read_sector(&mut self, sector: u64, buf: &mut [u8]) -> io::Result<usize> {
         //read sector
-        let value = self.get(sector)?;
+        let value: &[u8] = self.get(sector)?;
 
         //needs to read from cache
-        buf[..].copy_from_slice(value[..]);
+        buf[..].copy_from_slice(&value[..]);
         
         Ok(buf.len())
         
@@ -191,7 +199,7 @@ impl BlockDevice for CachedPartition {
 
 
         //needs to write into the cache
-        value = buf;
+        value.copy_from_slice(&buf[..]);
         Ok(buf.len())
 
     }

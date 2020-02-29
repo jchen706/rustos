@@ -7,41 +7,58 @@ use crate::vfat::Error;
 #[repr(C, packed)]
 pub struct BiosParameterBlock {
     jmp_short_xx_nop: [u8; 3],
-    oem_identifier: [u8; 8],
-    bytes_per_sector: u16,
-    sector_per_cluster: u8,
-    reserved_sector: u16,
-    number_fat: u8,
-    directory_entries: [u8;2],
-    total_logical_sectors: [u8;2],
-    fat_id : u8,
-    sector_per_FAT: [u8;2],
-    sector_per_track: [u8;2],
-    heads_str_media: [u8;2],
-    hidden_sectors: [u8;4],
-    logical_sectors: [u8;4],
-
-
-    size_FAT_sectors: u32,
-    flags: [u8;2],
-    version_number: [u8;2],
-    root_cluster: u32,
-    fsinfo_struct_sec: [u8;2],
-    backup_boot_sec: : [u8;2],
-    reserved_vol: [u8;12],
-    drive_number: u8,
-    windows_nt: u8,
-    signature: u8,
-    volume_id: [u8;4],
-    volume_label: [u8;11],
-    system_identifier: [u8;8],
-    boot_code: [u8;420],
-    partition_signature: [u8;2],
+    oem_identifier: [u8; 8], //11
+    bytes_per_sector: u16,  //13
+    sector_per_cluster: u8,  //14
+    reserved_sector: u16,  //16
+    number_fat: u8,         //17
+    directory_entries: [u8;2],  //19
+    total_logical_sectors: [u8;2], //21
+    fat_id : u8,                      //22
+    sector_per_FAT: [u8;2],            //24
+    sector_per_track: [u8;2],      //26
+    heads_str_media: [u8;2],          //28  
+    hidden_sectors: [u8;4],        //32
+    logical_sectors: [u8;4],  //36
+    size_FAT_sectors: u32,        //40
+    flags: [u8;2],        //42 
+    version_number: [u8;2],  //44
+    root_cluster: u32,              //48
+    fsinfo_struct_sec: [u8;2],  //50
+    backup_boot_sec:  [u8;2],  //52
+    reserved_vol: [u8;12],  //64
+    drive_number: u8,      //65
+    windows_nt: u8,  //66
+    signature: u8,  //67
+    volume_id: [u8;4],   //71
+    volume_label: [u8;11],  //82
+    system_identifier: [u8;8],  //90
+    boot_code: [u8;420],        
+    partition_signature: u16,
 }
 
 const_assert_size!(BiosParameterBlock, 512);
 
 impl BiosParameterBlock {
+    //public functions
+
+    pub fn get_bytes_per_sector(&self) -> u16 {
+        self.bytes_per_sector
+    }
+
+    pub fn get_sector_per_cluster(&self) -> u8 {
+        self.sector_per_cluster
+    }
+
+    pub fn get_reserved_sector(&self)-> u16 {
+        self.reserved_sector
+    }
+
+
+
+
+
+
     /// Reads the FAT32 extended BIOS parameter block from sector `sector` of
     /// device `device`.
     ///
@@ -52,7 +69,7 @@ impl BiosParameterBlock {
         
     	let mut buf = [0u8; 512];
 
-    	let value = device.read(sector, &mut buf)?;
+    	let value = device.read_sector(sector, &mut buf)?;
 
     	if value != 512 {
     		return Err(Error::Io(io::Error::new(io::ErrorKind::UnexpectedEof, "Device did not read 512 bytes")))
@@ -72,8 +89,9 @@ impl BiosParameterBlock {
 
 impl fmt::Debug for BiosParameterBlock {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("MasterBootRecord")
+        f.debug_struct("BiosParameterBlock")
         	.field("partition_signature", &self.partition_signature)
+            .finish()
 
 
     }

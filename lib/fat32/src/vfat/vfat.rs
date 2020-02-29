@@ -65,16 +65,16 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
         let ebpb = BiosParameterBlock::from(&mut device, bpb_sector);
 
 
-        let bytes_per_sector = ebpb.bytes_per_sector;
-        let rootdir = ebpb.root_cluster;
-        let sect_per_fat = ebpb.size_FAT_sectors;
-        let sect_per_cluster = ebpb.sector_per_cluster;
+        let bytes_per_sector = ebpb.get_bytes_per_sector();
+        let rootdir = ebpb.get_root_cluster();
+        let sect_per_fat = ebpb.get_sector_per_fat();
+        let sect_per_cluster = ebpb.get_sector_per_cluster();
 
         //fat start sector
 
         //offset of fat from ebpb
-        let number_of_reserve_sec = ebpb.reserve_sector;
-        let fat_start = bpb_sector as u64 + number_of_reserve_sec as u64;
+        let number_of_reserve_sec = ebpb.get_reserved_sector();
+        let fat_start = number_of_reserve_sec as u64;
 
          
 
@@ -91,7 +91,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
             num_sectors: sect_per_fat as u64 * ebpb.num_fat as u64 + sect_per_cluster as u64,
             sector_size: bytes_per_sector as u64,
 
-        }
+        };
 
 
         let cache_partition = CachedPartition::new(device, partition1);
@@ -105,7 +105,6 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
             fat_start_sector: fat_start,
             data_start_sector: data_start as u64,
             rootdir_cluster: Cluster::from(rootdir),
-
 
         })
 
@@ -126,12 +125,18 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
            buf: &mut [u8]
        ) -> io::Result<usize> {
 
+        //check for the valid of cluster number 
 
 
-        let fat_en = fat_entry(cluster.0)?;
+        // cluster
+        let cluster_start = self.data_start_sector + (cluster.get_clusterValue()-2) * self.sectors_per_cluster;
+        let cluter_index = offset % self.bytes_per_sector;
 
 
-        
+
+        let fat_en = fat_entry(cluster)?;
+
+
         match fat_en {
             Status::Data(x) => {
                 self.device.read_sector(cluster.0 + offset as u64, buf)
@@ -140,7 +145,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
 
             },
             _=> {
-
+                return Err(io::Error::new(io::ErrorKind::InvalidInput, "Cluster status can't be read."));
             }
 
 
@@ -173,22 +178,41 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
     //     
        fn fat_entry(&mut self, cluster: Cluster) -> io::Result<&FatEntry> {
 
-        //find the next cluster 
-        ///
+        //find the cluster 
+        //cluster number
+        let clusternum = cluster.get_clusterValue();
+
+        //map cluster 
+
+        
+        let fat_sector_num, fat_entry_offset = map_cluster_entry(clusternum);
 
         //have the cluster number 
 
         //get the logical sector specified by the ebpb to physical sectors 
         //virtual to physical
-        self.device.read_sector(cluster.0)
+        //logical sector number 
 
+    
+        let value:&[u8] = self.device.get(fat_sector_num)?;
 
-        let fat_en = FatEntry(cluster.0);
+        let f_entry = unsafe{value.cast()}
 
-        Ok(fat_en)
+        Ok(&f_entry[0])
 
 
        }
+
+
+       fn map_cluster_entry(&self, num: u64)-> (u64, u64) {
+            let fatsecnum =  self.fat_start_sector + (num * 4) / (self.bytes_per_sector as u64);   
+            let fatentryoffset = (num*4) % bytes_per_sector as u64
+            (fatsecnum, fatentryoffset)
+       }
+
+
+
+
 }
 
 impl<'a, HANDLE: VFatHandle> FileSystem for &'a HANDLE {
