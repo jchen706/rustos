@@ -50,7 +50,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
         let mbr = MasterBootRecord::from(&mut device)?;
 
         //get the bpb partition adrress
-        let bpb = mbr.partition_table[0];
+        let bpb = mbr.get_partition().unwrap()[0];
 
         if !bpb.is_fat32() {
             return Err(Error::Io(io::Error::new(io::ErrorKind::UnexpectedEof, "Device did not read 512 bytes")));
@@ -60,9 +60,9 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
 
         //relative offset, offset in sectors from the start of disk to the partition
 
-        let bpb_sector = bpb.relative_sector as u64;
+        let bpb_sector = bpb.get_relative_sector() as u64;
 
-        let ebpb = BiosParameterBlock::from(&mut device, bpb_sector);
+        let ebpb = BiosParameterBlock::from(&mut device, bpb_sector)?;
 
 
         let bytes_per_sector = ebpb.get_bytes_per_sector();
@@ -83,12 +83,12 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
 
         //number of fats * size of fats + fat offset = first address of data region
         //sector per fact *  32 bytes of 16 bytes + fat_sart
-        let data_start = ebpb.num_fat as u64 * sect_per_fat as u64 + fat_start;
+        let data_start = ebpb.get_number_FAT() as u64 * sect_per_fat as u64 + fat_start;
 
         //number of sectors in parition = sectors of fat + sectors of clutster
         let partition1 = Partition {
             start: bpb_sector as u64,
-            num_sectors: sect_per_fat as u64 * ebpb.num_fat as u64 + sect_per_cluster as u64,
+            num_sectors: sect_per_fat as u64 * ebpb.get_number_FAT() as u64 + sect_per_cluster as u64,
             sector_size: bytes_per_sector as u64,
 
         };
@@ -97,8 +97,9 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
         let cache_partition = CachedPartition::new(device, partition1);
 
 
-        Ok(VFat {
-            device: partition1,
+        Ok(VFatHandle::new(VFat{
+            phantom: PhantomData<HANDLE>,
+            device: cache_partition,
             bytes_per_sector: bytes_per_sector,
             sectors_per_cluster: sect_per_cluster,
             sectors_per_fat: sect_per_fat,
@@ -106,7 +107,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
             data_start_sector: data_start as u64,
             rootdir_cluster: Cluster::from(rootdir),
 
-        })
+        }))
 
 
 
@@ -117,7 +118,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
     // TODO: The following methods may be useful here:
     //
     //  * A method to read from an offset of a cluster into a buffer.
-    //
+    //  read the bluster 
        fn read_cluster(
            &mut self,
            cluster: Cluster,
@@ -126,33 +127,68 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
        ) -> io::Result<usize> {
 
         //check for the valid of cluster number 
+        if cluster.get_clusterValue() < 2 {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Cluster is less than 2"));
+        }
 
 
         // cluster
-        let cluster_start = self.data_start_sector + (cluster.get_clusterValue()-2) * self.sectors_per_cluster;
-        let cluter_index = offset % self.bytes_per_sector;
+        //gets the sector 
+        let cluster_start = self.data_start_sector + (cluster.get_clusterValue() as u64 -2) * self.sectors_per_cluster as u64;
+
+        let sector_offset = offset / self.bytes_per_sector as usize;
+
+        let byte_offset = offset % self.bytes_per_sector as usize;
 
 
 
-        let fat_en = fat_entry(cluster)?;
+        //get the entry of the of fat32 which contains the next 
+
+        //number of bytes to read from the sector 
+        let bytesread:usize = 0;
+
+        //buf len or whole cluster 
+
+        //read all the sectors in the cluster 
+        loop {
 
 
-        match fat_en {
-            Status::Data(x) => {
-                self.device.read_sector(cluster.0 + offset as u64, buf)
-            },
-            Status::Eoc(y) => {
+            //current sector
+            let sector = (sector_offset + bytesread) / self.bytes_per_sector as usize; 
 
-            },
-            _=> {
-                return Err(io::Error::new(io::ErrorKind::InvalidInput, "Cluster status can't be read."));
+
+            //exit the loop
+            if (sector >= self.sectors_per_cluster as usize) {
+                break;
             }
 
 
+            //current byte offset
+            byte_offset = (offset + bytesread) % self.bytes_per_sector as usize;
+
+            //read from a sector
+            let value:&[u8] = self.device.get(cluster_start + sector_offset as u64)?; 
+
+            //size of return
+            let sector_size = value.len() as usize- byte_offset;
+
+            //copy to the buf
+            buf[bytesread..bytesread + sector_size].copy_from_slice(&value[byte_offset..]);
+
+            //add the number of bytes read
+            bytesread += sector_size;
+
+
+
+
+           
+        
         }
 
-        
-       }
+
+        //return bytes copy
+        Ok(bytesread as usize) 
+   }
     
 
 
@@ -165,6 +201,55 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
            start: Cluster,
            buf: &mut Vec<u8>
        ) -> io::Result<usize> {
+
+        //so we have cluster starting, we read all the sectors from the cluster
+
+        //see the fat entry table -- find the next cluster, repeat the read
+
+        //break on Eoc, or invalid reserve, bad, status
+
+
+        if start.get_clusterValue() < 2 {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Cluster is less than 2"));
+        }
+
+
+        // cluster
+        //gets the sector 
+        let cluster_start = self.data_start_sector + (start.get_clusterValue() as u64 -2) * self.sectors_per_cluster as u64;
+
+
+        let cluster_current = start;
+
+        let bytesread = 0;
+
+        loop {
+
+            let fat_entry1 = self.fat_entry(cluster_current)?;
+
+            let byte_size = self.read_cluster(cluster_current, 0, &mut buf[bytesread..])?;
+
+            bytesread += byte_size as usize;
+
+            match fat_entry1.status() {
+                Status::Data(x) => {
+                    cluster_current = x;
+                },
+                Status::Eoc(y) => {
+                    break;
+                },
+                _ => {
+
+                    //mabye Err
+                    break;
+                }
+
+            }
+
+        }
+
+        Ok(bytesread)
+
 
  
 

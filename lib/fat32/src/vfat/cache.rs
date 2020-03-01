@@ -90,7 +90,7 @@ impl CachedPartition {
 
         if !self.cache.contains_key(&sector) {
             
-            let physical_sector = virtual_to_physical(sector);
+            let physical_sector = self.virtual_to_physical(sector);
 
             match physical_sector {
                 None => {
@@ -138,10 +138,12 @@ impl CachedPartition {
         
         if !self.cache.contains_key(&sector) {
             
-            let physical_sector = virtual_to_physical(sector).unwrap();
+            let physical_sector = self.virtual_to_physical(sector);
             if physical_sector == None {
                 return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not determine physical sector"));
             }
+
+            let physical_sec = physical_sector.unwrap();
 
             //read the entire physical sector
             //need to find the number of physical sector by the logical sector
@@ -149,7 +151,7 @@ impl CachedPartition {
             let mut buf:Vec<u8> = Vec::new();
 
             for i in 0..num_ps {
-                let value = self.device.read_sector(physical_sector + i, &mut buf)?;
+                let value = self.device.read_sector(physical_sec + i, &mut buf)?;
             } 
 
             self.cache.insert(sector, CacheEntry {data:buf, dirty: false});
@@ -187,7 +189,7 @@ impl BlockDevice for CachedPartition {
         let value: &[u8] = self.get(sector)?;
 
         //needs to read from cache
-        buf[..].copy_from_slice(&value[..]);
+        buf.copy_from_slice(&value[..]);
         
         Ok(buf.len())
         

@@ -3,6 +3,12 @@ use shim::const_assert_size;
 
 use crate::traits::BlockDevice;
 use crate::vfat::Error;
+use core::mem;
+
+
+//need to import but already in vfat::Error
+use shim::io;
+
 
 #[repr(C, packed)]
 pub struct BiosParameterBlock {
@@ -54,6 +60,17 @@ impl BiosParameterBlock {
         self.reserved_sector
     }
 
+    pub fn get_sector_per_fat(&self)-> u32 {
+        self.size_FAT_sectors
+    }
+
+    pub fn get_root_cluster(&self)-> u32 {
+        self.root_cluster
+    }
+
+    pub fn get_number_FAT(&self)-> u8 {
+        self.number_fat
+    }
 
 
 
@@ -72,11 +89,11 @@ impl BiosParameterBlock {
     	let value = device.read_sector(sector, &mut buf)?;
 
     	if value != 512 {
-    		return Err(Error::Io(io::Error::new(io::ErrorKind::UnexpectedEof, "Device did not read 512 bytes")))
+            return Err(Error::Io(io::Error::new(io::ErrorKind::UnexpectedEof, "Device did not read 512 bytes")))
 
     	}
 
-    	let bpb: BiosParameterBlock = unsafe {mem:transmute(buf)};
+    	let bpb: BiosParameterBlock = unsafe {mem::transmute(buf)};
 
     	if bpb.partition_signature != 0xAA55 {
     		return Err(Error::BadSignature);

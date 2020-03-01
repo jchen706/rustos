@@ -37,7 +37,7 @@ impl FatEntry {
         } else if num2 == 1 {
             return Status::Reserved;
         } else if num2 >= 2 && num2 <= 0x0FFFFFEF{
-            return Status::Data(Cluster(num));
+            return Status::Data(Cluster::from(num));
         } else if num2 >= 0x0FFFFFF0 && num <= 0x0FFFFFF6{
             return Status::Reserved;
         } else if num2 == 0x0FFFFFF7 {
@@ -49,6 +49,8 @@ impl FatEntry {
 
         }
     }
+
+    pub 
 }
 
 impl fmt::Debug for FatEntry {

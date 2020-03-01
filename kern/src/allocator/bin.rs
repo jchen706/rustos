@@ -183,6 +183,8 @@ impl LocalAlloc for Allocator {
                 //loop through all the bins
                 //if the bin not empty merge the size
 
+                
+
 
 
 

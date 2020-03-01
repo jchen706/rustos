@@ -88,6 +88,11 @@ impl PartitionEntry {
     }
 
 
+    pub fn get_relative_sector(&self)-> u32 {
+        self.relative_sector
+    }
+
+
 }
 
 // FIXME: implement Debug for PartitionEntry
@@ -188,5 +193,10 @@ impl MasterBootRecord {
         Ok(mbr)
     }
 
+    }
+
+
+    pub fn get_partition(&self) -> Option<[PartitionEntry;4]> {
+        Some(self.partition_table)
     }
 }
