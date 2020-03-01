@@ -9,6 +9,27 @@ use crate::vfat::{Cluster, Metadata, VFatHandle};
 pub struct File<HANDLE: VFatHandle> {
     pub vfat: HANDLE,
     // FIXME: Fill me in.
+    pub start_cluster:Cluster,
+    pub name: String,
+    pub metadata: Metadata,
+    pub size:u64,
+    pub current_offset:u64,
+    pub current_cluster: Cluster,
+    
+
+}
+
+
+impl File {
+
+
+    pub fn name(&self)-> &str {
+        &self.name
+    }
+
+    pub fn metadata(&self)-> &Metadata {
+        &self.metadata
+    }
 }
 
 // FIXME: Implement `traits::File` (and its supertraits) for `File`.
@@ -27,7 +48,150 @@ impl<HANDLE: VFatHandle> io::Seek for File<HANDLE> {
     ///
     /// Seeking before the start of a file or beyond the end of the file results
     /// in an `InvalidInput` error.
-    fn seek(&mut self, _pos: SeekFrom) -> io::Result<u64> {
-        unimplemented!("File::seek()")
+    pub fn seek(&mut self, _pos: SeekFrom) -> io::Result<u64> {
+
+        //move within a stream of bytes 
+
+        let offset = 0;
+        //start(i64)
+        match _pos {
+
+            SeekFrom::Start(num) => {
+                if num > self.size() || num < 0 {
+                    return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid Seek Input"));
+                } else {
+                    offset = num ;
+                }
+
+            },
+            SeekFrom::Current(num2) => {
+                // add code here
+                if (num2 < 0) {
+
+                     if (num2) + self.current_offset as i64 < 0 {
+                        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid Seek Input"));                        
+                     } else {
+                        offset = self.current_offset+ num2;
+                     }
+
+                } else {
+                     if (num2) + self.current_offset as i64 > self.size() {
+                        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid Seek Input"));
+                     } else {
+                         offset = self.current_offset + num2;
+                     }
+
+                }
+            },
+            SeedFrom::End(num3)=> {
+                if (num3 < 0) {
+
+                     if (num3) + self.size() as i64 < 0 {
+                        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid Seek Input"));                        
+                     } else {
+                        offset = self.size() + num3;
+                     }
+
+                } else {
+                     if (num3) + self.size() as i64 > self.size() {
+                        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid Seek Input"));
+                     } else {
+                         offset= self.size() + num3;
+                     }
+
+                }
+
+
+            }
+        }
+
+
+        //set the file to the offset
+        self.current_offset = offset;     
+        Ok(offset)
+
+
+
+        
+    }
+
+   
+}
+
+impl<HANDLE:VFatHandle> traits::File for File<HANDLE> {
+    // add code here
+
+     /// Writes any buffered data to disk.
+    fn sync(&mut self) -> io::Result<()> {
+        unimplemented!("read only file system")
+    }
+
+    /// Returns the size of the file in bytes.
+    pub fn size(&self) -> u64 {
+        self.size
     }
 }
+
+
+impl<HANDLE: VFatHandle> io::Read for File<HANDLE> {
+
+    fn read(&mut self, buf: &mut [u8])-> io::Result<usize> {
+
+        let bytesread = 0;
+
+        if current_offset == 0 {
+
+
+            //read chain
+
+
+            
+        } else {
+
+
+            //read chain with offset 
+
+
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+}
+
+
+
+impl<HANDLE: VFatHandle> io::Write for File<HANDLE> {
+
+    fn write(&mut self, buf:&[u8]) -> io::Result<usize> {
+        unimplemented!("read only file system")
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        unimplemented!("read only file system")
+    }
+
+
+}
+
+
+

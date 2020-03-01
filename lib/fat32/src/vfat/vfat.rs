@@ -219,7 +219,8 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
         let cluster_start = self.data_start_sector + (start.get_clusterValue() as u64 -2) * self.sectors_per_cluster as u64;
 
 
-        let cluster_current = start;
+
+        let cluster_current = cluster_start;
 
         let bytesread = 0;
 
@@ -236,6 +237,101 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
                     cluster_current = x;
                 },
                 Status::Eoc(y) => {
+                    break;
+                },
+                _ => {
+
+                    //mabye Err
+                    break;
+                }
+
+            }
+
+        }
+
+        Ok(bytesread)
+
+
+ 
+
+
+    
+       }
+
+
+
+        fn read_chain_offset(
+           &mut self,
+           start: Cluster,
+           offset: u64,
+           buf: &mut Vec<u8>
+       ) -> io::Result<usize> {
+
+        //so we have cluster starting, we read all the sectors from the cluster
+
+        //see the fat entry table -- find the next cluster, repeat the read
+
+        //break on Eoc, or invalid reserve, bad, status
+
+
+        if start.get_clusterValue() < 2 {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Cluster is less than 2"));
+        }
+
+
+        // cluster
+        //gets the sector 
+        let cluster_start = self.data_start_sector + (start.get_clusterValue() as u64 -2) * self.sectors_per_cluster as u64;
+
+        let sector_offset = offset / self.bytes_per_sector as usize;
+
+
+
+        //offset    //bytes per cluster 
+        let cluster_ offset = offset / (self.sector_per_cluster * self.bytes_per_sector)
+
+        //starting cluster with offset 
+        cluster_start = cluster_start + cluster_offset;
+
+        //byte offset 
+        let byte_offset = offset % self.bytes_per_sector as usize;
+
+        let cluster_current = cluster_start;
+
+        let bytesread = 0;
+
+
+        //the the offset cluster
+        let byte_size = self.read_cluster(cluster_current, byte_offset, &mut buf[bytesread..])?;
+
+
+        
+        bytesread+= byte_size;
+
+        //read 2
+
+
+        //get 4
+
+
+
+
+        loop {
+
+            let fat_entry1 = self.fat_entry(cluster_current)?; //get 4
+
+
+            let byte_size = self.read_cluster(cluster_current, 0, &mut buf[bytesread..])?;
+
+            bytesread += byte_size as usize;
+
+            match fat_entry1.status() {
+                Status::Data(x) => {
+                    cluster_current = x;
+                },
+                Status::Eoc(y) => {
+                    byte_size = self.read_cluster(cluster_current, 0, &mut buf[bytesread..])?;
+                    bytesread += byte_size as usize;
                     break;
                 },
                 _ => {
