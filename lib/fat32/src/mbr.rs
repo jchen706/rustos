@@ -119,7 +119,7 @@ pub struct MasterBootRecord {
     bootstrap: [u8; 436],
     unique_id: [u8; 10],
     partition_table: [PartitionEntry; 4],
-    signature: u16,
+    signature: [u8;2],
 }
 
 // FIXME: implemente Debug for MaterBootRecord
@@ -179,12 +179,12 @@ impl MasterBootRecord {
 
         let mbr: MasterBootRecord = unsafe{mem::transmute(sector)};
 
-        if mbr.signature != 0xAA55 {
+        if mbr.signature != [0x55, 0xAA] {
             return Err(Error::BadSignature);
         }
 
         for i in 0..4 {
-            if !mbr.partition_table[i].get_bootflag() {
+            if mbr.partition_table[i].status != 0x00 && mbr.partition_table[i].status !=0x80 {
                 return Err(Error::UnknownBootIndicator(i as u8));
             }
         }
@@ -196,7 +196,7 @@ impl MasterBootRecord {
     }
 
 
-    pub fn get_partition(&self) -> Option<[PartitionEntry;4]> {
-        Some(self.partition_table)
+    pub fn get_partition(&self) -> Option<&[PartitionEntry;4]> {
+        Some(&self.partition_table)
     }
 }

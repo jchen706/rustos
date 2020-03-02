@@ -21,38 +21,81 @@ impl<HANDLE: VFatHandle> traits::Entry for Entry<HANDLE> {
 
 
     	match self {
-    		File(x) => {
-
-    		}
-
-    		Dir<HANDLE> => {
-
+    		Entry::File(x) => {
+    			return &x.name;
+    		},
+    		Entry::Dir(y) => {
+    			return &y.name;
     		}
 
 
     	}
 
-
-        
-
-
     }
 
     fn metadata(&self) -> &Self::Metadata {
+    	match self {
+    		Entry::File(x) => {
+    			return &x.metadata;
+    		},
+    		Entry::Dir(y) => {
+    			return &y.metadata;
+    		}
+
+
+    	}
       
     }
-    fn as_file(&self) -> Option<&Self::File<HANDLE>> {
+
+    fn as_file(&self) -> Option<&File<HANDLE>> {
+        match self {
+    		Entry::File(x) => {
+    			return Some(&x);
+    		},
+    		_ => {
+    			return None;
+    		}
+
+
+    	}
+    }
+    fn as_dir(&self) -> Option<&Dir<HANDLE>> {
+    	match self {
+    		Entry::Dir(x) => {
+    			return Some(&x);
+    		},
+    		_ => {
+    			return None;
+    		}
+
+
+    	}
         
     }
-    fn as_dir(&self) -> Option<&Self::Dir<HANDLE>> {
-        
+    fn into_file(self) -> Option<File<HANDLE>> {
+       match self {
+    		Entry::File(x) => {
+    			return Some(x);
+    		},
+    		_ => {
+    			return None;
+    		}
+
+
+    	}
     }
-    fn into_file(self) -> Option<Self::File<HANDLE>> {
-       
+    fn into_dir(self) -> Option<Dir<HANDLE>> {
+        match self {
+    		Entry::Dir(x) => {
+    			return Some(x);
+    		},
+    		_ => {
+    			return None;
+    		}
+
+
+    	}
     }
-    fn into_dir(self) -> Option<Self::Dir<HANDLE>> {
-        
-    }`
 
 
 

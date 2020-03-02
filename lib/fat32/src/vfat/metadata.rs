@@ -41,7 +41,14 @@ pub struct Metadata {
 
 
 impl Date {
-	pub fn year(&self) -> usize {
+
+	pub fn new (num: u16)-> Option<Date> {
+		Some(Date(num))
+	}
+
+
+
+	fn year(&self) -> usize {
 		((self.0 >> 9) as usize + 1980)   
 		
 	}
@@ -49,13 +56,13 @@ impl Date {
     /// The calendar month, starting at 1 for January. Always in range [1, 12].
     
     /// January is 1, Feburary is 2, ..., December is 12.
-    pub fn month(&self) -> u8 {
+    fn month(&self) -> u8 {
     	((self.0 >> 5) & 0b0000000000001111) as u8
    
     }
 
     /// The calendar day, starting at 1. Always in range [1, 31].
-    pub fn day(&self) -> u8 {
+    fn day(&self) -> u8 {
     	self.0 as u8 & !(!0<<5)
     }
 
@@ -64,18 +71,23 @@ impl Date {
 
 impl Time {
 	/// The 24-hour hour. Always in range [0, 24).
-    pub fn hour(&self) -> u8 {
+
+	pub fn new (num: u16)-> Option<Time> {
+		Some(Time(num))
+	}
+
+    fn hour(&self) -> u8 {
     	(self.0 >> 11) as u8
 
     }
 
     /// The minute. Always in range [0, 60).
-    pub fn minute(&self) -> u8 {
+    fn minute(&self) -> u8 {
     	((self.0 >> 5) & 0b0000000000111111) as u8
     }
 
     /// The second. Always in range [0, 60).
-    pub fn second(&self) -> u8 {
+    fn second(&self) -> u8 {
     	(self.0 as u8 & !(!0<<5)) * 2
 
     }
@@ -84,6 +96,10 @@ impl Time {
 }
 
 impl Attributes {
+
+	pub fn new(num:u8)-> Attributes {
+		Attributes(num)
+	}
 
 	pub fn read_only(&self) -> bool {
 		self.0 == 0x01
@@ -116,7 +132,7 @@ impl Attributes {
 // FIXME: Implement `traits::Timestamp` for `Timestamp`.
 impl traits::Timestamp for Timestamp {
 
-    pub fn year(&self) -> usize {
+    fn year(&self) -> usize {
 		self.date.year() 
 		
 	}
@@ -124,29 +140,29 @@ impl traits::Timestamp for Timestamp {
     /// The calendar month, starting at 1 for January. Always in range [1, 12].
     
     /// January is 1, Feburary is 2, ..., December is 12.
-    pub fn month(&self) -> u8 {
+    fn month(&self) -> u8 {
 		self.date.month()   
     }
 
     /// The calendar day, starting at 1. Always in range [1, 31].
-    pub fn day(&self) -> u8 {
+    fn day(&self) -> u8 {
     	self.date.day()
     }
 
 	
     /// The 24-hour hour. Always in range [0, 24).
-    pub fn hour(&self) -> u8 {
+    fn hour(&self) -> u8 {
     	 self.time.hour()
 
     }
 
     /// The minute. Always in range [0, 60).
-    pub fn minute(&self) -> u8 {
+    fn minute(&self) -> u8 {
     	   self.time.minute()
     }
 
     /// The second. Always in range [0, 60).
-    pub fn second(&self) -> u8 {
+    fn second(&self) -> u8 {
     	    self.time.second()
 
     }
@@ -156,6 +172,27 @@ impl traits::Timestamp for Timestamp {
 
 impl Metadata {
 
+	pub fn default()->Metadata {
+
+		Metadata {
+			created: Timestamp {
+                            date: Date::new(0).unwrap(),
+                            time: Time::new(0).unwrap(),
+                       },
+                        accessed: Timestamp {
+                             date: Date::new(0).unwrap(),
+                            time: Time::new(0).unwrap(),
+                        },
+                        modified: Timestamp {
+                             date: Date::new(0).unwrap(),
+                            time: Time::new(0).unwrap(),
+                        },
+                        attributes: Attributes::new(0x3)
+		}
+
+	}
+		
+		
 	pub fn new(created: Timestamp, accessed: Timestamp, modified: Timestamp, attributes: Attributes) -> Metadata {
 		Metadata {
 			created: created,
@@ -209,7 +246,7 @@ impl traits::Metadata for Metadata {
 impl fmt::Display for Timestamp {
 	fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 		use traits::Timestamp;
-		write!(f, "Month: {0}, Day:{1}, Year: {2}, Minutes: {2}, Seconds:{3}  ", 
+		write!(f, "Month: {0}, Day:{1}, Year: {2}, Minutes: {3}, Seconds:{4}  ", 
 		self.month(), self.day(), self.year(), self.minute(), self.second())
 	}
 

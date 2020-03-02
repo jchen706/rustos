@@ -20,7 +20,7 @@ pub struct File<HANDLE: VFatHandle> {
 }
 
 
-impl File {
+impl <HANDLE: VFatHandle> File<HANDLE>  {
 
 
     pub fn name(&self)-> &str {
@@ -48,19 +48,19 @@ impl<HANDLE: VFatHandle> io::Seek for File<HANDLE> {
     ///
     /// Seeking before the start of a file or beyond the end of the file results
     /// in an `InvalidInput` error.
-    pub fn seek(&mut self, _pos: SeekFrom) -> io::Result<u64> {
+    fn seek(&mut self, _pos: SeekFrom) -> io::Result<u64> {
 
         //move within a stream of bytes 
 
-        let offset = 0;
+        let mut offset = 0;
         //start(i64)
         match _pos {
 
             SeekFrom::Start(num) => {
-                if num > self.size() || num < 0 {
+                if num as u64 > self.size || num < 0 {
                     return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid Seek Input"));
                 } else {
-                    offset = num ;
+                    offset = num  as u64;
                 }
 
             },
@@ -68,35 +68,55 @@ impl<HANDLE: VFatHandle> io::Seek for File<HANDLE> {
                 // add code here
                 if (num2 < 0) {
 
-                     if (num2) + self.current_offset as i64 < 0 {
-                        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid Seek Input"));                        
-                     } else {
-                        offset = self.current_offset+ num2;
+
+                     match self.size.checked_sub((-num2) as u64) {
+                        Some(x) => {
+                            offset = self.current_offset + x;
+                            if (offset > self.size) {
+                                return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid Seek Input"));                        
+
+                            }
+
+                        },
+                        None => {
+                           return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid Seek Input"));                        
+                      }
                      }
 
+
                 } else {
-                     if (num2) + self.current_offset as i64 > self.size() {
+                     if (num2 as u64) + self.current_offset  > self.size {
                         return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid Seek Input"));
                      } else {
-                         offset = self.current_offset + num2;
+                         offset = self.current_offset + num2 as u64
                      }
 
                 }
             },
-            SeedFrom::End(num3)=> {
+            SeekFrom::End(num3)=> {
                 if (num3 < 0) {
 
-                     if (num3) + self.size() as i64 < 0 {
-                        return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid Seek Input"));                        
-                     } else {
-                        offset = self.size() + num3;
+                     match self.size.checked_sub((-num3) as u64) {
+                        Some(x) => {
+                            offset = self.size + x;
+                            if (offset > self.size) {
+                                return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid Seek Input"));                        
+
+                            }
+
+                        },
+                        None => {
+                           return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid Seek Input"));                        
+                      }
                      }
+                     
 
                 } else {
-                     if (num3) + self.size() as i64 > self.size() {
+
+                     if (num3) as u64 + self.size  > self.size {
                         return Err(io::Error::new(io::ErrorKind::InvalidInput, "Invalid Seek Input"));
                      } else {
-                         offset= self.size() + num3;
+                         offset= self.size + num3 as u64;
                      }
 
                 }
@@ -127,7 +147,7 @@ impl<HANDLE:VFatHandle> traits::File for File<HANDLE> {
     }
 
     /// Returns the size of the file in bytes.
-    pub fn size(&self) -> u64 {
+    fn size(&self) -> u64 {
         self.size
     }
 }
@@ -137,42 +157,28 @@ impl<HANDLE: VFatHandle> io::Read for File<HANDLE> {
 
     fn read(&mut self, buf: &mut [u8])-> io::Result<usize> {
 
-        let bytesread = 0;
+        let mut bytesread = 0;
 
-        if current_offset == 0 {
+        if self.current_offset == 0 {
 
 
             //read chain
 
 
-            
+            bytesread = self.vfat.lock(|vfat| vfat.read_chain(self.start_cluster,&mut buf.to_vec()))?;
+
         } else {
 
 
             //read chain with offset 
 
+            bytesread = self.vfat.lock(|vfat| vfat.read_chain_offset(self.start_cluster,self.current_offset,&mut buf.to_vec()))?;
 
 
 
         }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        Ok(bytesread as usize)
 
     }
 

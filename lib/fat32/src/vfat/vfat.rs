@@ -1,6 +1,7 @@
 use core::fmt::Debug;
 use core::marker::PhantomData;
 use core::mem::size_of;
+use core::str;
 
 use alloc::vec::Vec;
 
@@ -9,6 +10,7 @@ use shim::ioerr;
 use shim::newioerr;
 use shim::path;
 use shim::path::Path;
+use shim::path::Component;
 
 use crate::mbr::MasterBootRecord;
 use crate::traits::{BlockDevice, FileSystem};
@@ -31,7 +33,7 @@ pub struct VFat<HANDLE: VFatHandle> {
     sectors_per_fat: u32,
     fat_start_sector: u64,
     data_start_sector: u64,
-    rootdir_cluster: Cluster,
+    pub rootdir_cluster: Cluster,
 }
 
 impl<HANDLE: VFatHandle> VFat<HANDLE> {
@@ -50,7 +52,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
         let mbr = MasterBootRecord::from(&mut device)?;
 
         //get the bpb partition adrress
-        let bpb = mbr.get_partition().unwrap()[0];
+        let bpb = &mbr.get_partition().unwrap()[0];
 
         if !bpb.is_fat32() {
             return Err(Error::Io(io::Error::new(io::ErrorKind::UnexpectedEof, "Device did not read 512 bytes")));
@@ -98,7 +100,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
 
 
         Ok(VFatHandle::new(VFat{
-            phantom: PhantomData<HANDLE>,
+            phantom: PhantomData,
             device: cache_partition,
             bytes_per_sector: bytes_per_sector,
             sectors_per_cluster: sect_per_cluster,
@@ -119,7 +121,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
     //
     //  * A method to read from an offset of a cluster into a buffer.
     //  read the bluster 
-       fn read_cluster(
+    pub fn read_cluster(
            &mut self,
            cluster: Cluster,
            offset: usize,
@@ -138,14 +140,14 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
 
         let sector_offset = offset / self.bytes_per_sector as usize;
 
-        let byte_offset = offset % self.bytes_per_sector as usize;
+        let mut byte_offset = offset % self.bytes_per_sector as usize;
 
 
 
         //get the entry of the of fat32 which contains the next 
 
         //number of bytes to read from the sector 
-        let bytesread:usize = 0;
+        let mut bytesread:usize = 0;
 
         //buf len or whole cluster 
 
@@ -154,7 +156,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
 
 
             //current sector
-            let sector = (sector_offset + bytesread) / self.bytes_per_sector as usize; 
+            let mut sector = sector_offset + (bytesread / self.bytes_per_sector as usize); 
 
 
             //exit the loop
@@ -170,7 +172,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
             let value:&[u8] = self.device.get(cluster_start + sector_offset as u64)?; 
 
             //size of return
-            let sector_size = value.len() as usize- byte_offset;
+            let mut sector_size = value.len() as usize- byte_offset;
 
             //copy to the buf
             buf[bytesread..bytesread + sector_size].copy_from_slice(&value[byte_offset..]);
@@ -196,7 +198,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
     //  * A method to read all of the clusters chained from a starting cluster
     //    into a vector.
     //
-       fn read_chain(
+      pub fn read_chain(
            &mut self,
            start: Cluster,
            buf: &mut Vec<u8>
@@ -219,24 +221,28 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
         let cluster_start = self.data_start_sector + (start.get_clusterValue() as u64 -2) * self.sectors_per_cluster as u64;
 
 
+        //4
+        let mut cluster_current = cluster_start;
 
-        let cluster_current = cluster_start;
-
-        let bytesread = 0;
+        let mut bytesread = 0;
 
         loop {
+            //
+            
 
-            let fat_entry1 = self.fat_entry(cluster_current)?;
-
-            let byte_size = self.read_cluster(cluster_current, 0, &mut buf[bytesread..])?;
+            //read 4
+            let mut byte_size = self.read_cluster(Cluster::from(cluster_current as u32), 0, &mut buf[bytesread..])?;
 
             bytesread += byte_size as usize;
 
-            match fat_entry1.status() {
+            match self.fat_entry(Cluster::from(cluster_current as u32))?.status() {
                 Status::Data(x) => {
-                    cluster_current = x;
+
+                    cluster_current = x.get_clusterValue() as u64;
                 },
                 Status::Eoc(y) => {
+                    //byte_size = self.read_cluster(Cluster::from(cluster_current as u32), 0, &mut buf[bytesread..])?;
+                    //bytesread += byte_size as usize;
                     break;
                 },
                 _ => {
@@ -260,7 +266,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
 
 
 
-        fn read_chain_offset(
+      pub fn read_chain_offset(
            &mut self,
            start: Cluster,
            offset: u64,
@@ -281,32 +287,32 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
 
         // cluster
         //gets the sector 
-        let cluster_start = self.data_start_sector + (start.get_clusterValue() as u64 -2) * self.sectors_per_cluster as u64;
+        let mut cluster_start = self.data_start_sector + (start.get_clusterValue() as u64 -2) * self.sectors_per_cluster as u64;
 
-        let sector_offset = offset / self.bytes_per_sector as usize;
+        let mut sector_offset = offset / self.bytes_per_sector as u64;
 
 
 
         //offset    //bytes per cluster 
-        let cluster_ offset = offset / (self.sector_per_cluster * self.bytes_per_sector)
+        let mut cluster_offset = offset / (self.sectors_per_cluster as u64 * self.bytes_per_sector as u64);
 
         //starting cluster with offset 
         cluster_start = cluster_start + cluster_offset;
 
         //byte offset 
-        let byte_offset = offset % self.bytes_per_sector as usize;
+        let byte_offset = offset % self.bytes_per_sector as u64;
 
-        let cluster_current = cluster_start;
+        let mut cluster_current = cluster_start;
 
-        let bytesread = 0;
+        let mut bytesread = 0;
 
 
         //the the offset cluster
-        let byte_size = self.read_cluster(cluster_current, byte_offset, &mut buf[bytesread..])?;
+        let byte_size1 = self.read_cluster(Cluster::from(cluster_current as u32) , byte_offset as usize, &mut buf[bytesread..])?;
 
 
         
-        bytesread+= byte_size;
+        bytesread+= byte_size1;
 
         //read 2
 
@@ -318,20 +324,18 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
 
         loop {
 
-            let fat_entry1 = self.fat_entry(cluster_current)?; //get 4
+            //let fat_entry1 = self.fat_entry(Cluster::from(cluster_current as u32))?; //get 4
 
 
-            let byte_size = self.read_cluster(cluster_current, 0, &mut buf[bytesread..])?;
 
-            bytesread += byte_size as usize;
 
-            match fat_entry1.status() {
+            match  self.fat_entry(Cluster::from(cluster_current as u32))?.status() {
                 Status::Data(x) => {
-                    cluster_current = x;
+                    cluster_current = x.get_clusterValue() as u64;
                 },
                 Status::Eoc(y) => {
-                    byte_size = self.read_cluster(cluster_current, 0, &mut buf[bytesread..])?;
-                    bytesread += byte_size as usize;
+                    //byte_size = self.read_cluster(Cluster::from(cluster_current as u32), 0, &mut buf[bytesread..])?;
+                    //bytesread += byte_size as usize;
                     break;
                 },
                 _ => {
@@ -341,6 +345,11 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
                 }
 
             }
+
+
+            let mut byte_size = self.read_cluster(Cluster::from(cluster_current as u32), 0, &mut buf[bytesread..])?;
+            bytesread += byte_size as usize;
+
 
         }
 
@@ -357,7 +366,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
     //  * A method to return a reference to a `FatEntry` for a cluster where the
     //    reference points directly into a cached sector.
     //     
-       fn fat_entry(&mut self, cluster: Cluster) -> io::Result<&FatEntry> {
+       pub fn fat_entry(&mut self, cluster: Cluster) -> io::Result<&FatEntry> {
 
         //find the cluster 
         //cluster number
@@ -366,7 +375,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
         //map cluster 
 
         
-        let fat_sector_num, fat_entry_offset = map_cluster_entry(clusternum);
+        let (fat_sector_num, fat_entry_offset) = self.map_cluster_entry(clusternum);
 
         //have the cluster number 
 
@@ -377,7 +386,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
     
         let value:&[u8] = self.device.get(fat_sector_num)?;
 
-        let f_entry = unsafe{value.cast()}
+        let f_entry = unsafe{value.cast()};
 
         Ok(&f_entry[0])
 
@@ -385,9 +394,13 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
        }
 
 
-       fn map_cluster_entry(&self, num: u64)-> (u64, u64) {
-            let fatsecnum =  self.fat_start_sector + (num * 4) / (self.bytes_per_sector as u64);   
-            let fatentryoffset = (num*4) % bytes_per_sector as u64
+       pub fn map_cluster_entry(&self, num: u32)-> (u64, u64) {
+            if(num < 2) {
+                panic!("{:?}","here");
+            }
+
+            let fatsecnum =  self.fat_start_sector + (num as u64 * 4) / (self.bytes_per_sector as u64);   
+            let fatentryoffset = (num as u64 *4) % self.bytes_per_sector as u64;
             (fatsecnum, fatentryoffset)
        }
 
@@ -397,11 +410,86 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
 }
 
 impl<'a, HANDLE: VFatHandle> FileSystem for &'a HANDLE {
-    type File = crate::traits::Dummy;
-    type Dir = crate::traits::Dummy;
-    type Entry = crate::traits::Dummy;
+    type File = File<HANDLE>;
+    type Dir = Dir<HANDLE>;
+    type Entry = Entry<HANDLE>;
 
     fn open<P: AsRef<Path>>(self, path: P) -> io::Result<Self::Entry> {
-        unimplemented!("FileSystem::open()")
+        
+        use crate::traits::Entry;
+        use crate::vfat::Metadata;
+        //get the root cluster
+        let path1 = path.as_ref().components();
+
+        if !path.as_ref().is_absolute() {
+            return Err((io::Error::new(io::ErrorKind::InvalidInput,"Not a Absolute Path")));
+        }
+
+        let root_dir = self.lock(|vfat| vfat.rootdir_cluster);
+
+        //have the root directory, taverse from the root
+        //need the root entry
+
+        
+
+        let mut current_dir = self::Entry::Dir(
+            Dir {
+                    vfat: self.clone(),
+                     // FIXME: Fill me in.
+                     //first cluster
+                    start_cluster: root_dir,
+                    name: "/".to_string(),
+                    metadata: Metadata::default(),
+            }); 
+
+
+        for components in path1 {
+
+            match components {
+
+
+
+                    // Component::RootDir => {
+
+                    // },
+                    // // A reference to the current directory, i.e., `.`.
+                    // Componet::CurDir=> {},
+
+                    // // A reference to the parent directory, i.e., `..`.
+                    // Component::ParentDir=> {},
+
+                    // A normal component, e.g., `a` and `b` in `a/b`.
+                    //
+                    // This variant is the most common one, it represents references to files
+                    // or directories.
+                    Component::Normal(file_dir)=> {
+                        
+                        // current_dir = match current_dir.as_dir() {
+                        //     Some(direct) {
+                        //         direct    
+                        //     },
+                        //     None => {return Err(io::Error::new(io::ErrorKind::NotFound, "File Not Found"));},
+                        //     _ => {return Err(io::Error::new(io::ErrorKind::NotFound, "File Not Found"));},
+
+                        // };
+
+                        current_dir = current_dir.into_dir().ok_or(io::Error::new(io::ErrorKind::NotFound, "File not Found"))?.find(file_dir)?;
+
+                        
+
+
+
+                        },
+                        _=> {},
+
+                    }
+
+
+
+            }
+
+            Ok(current_dir)       
+
+
     }
 }

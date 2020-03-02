@@ -94,36 +94,33 @@ impl CachedPartition {
 
             match physical_sector {
                 None => {
-                return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not determine physical sector"));
+                return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not determine physical sector in get mut function"));
                 },
                 Some(x) => {
 
                      let num_ps = self.factor();
-            let mut buf:Vec<u8> = Vec::new();
+                     let mut buf:Vec<u8> = Vec::new();
 
-            for i in 0..num_ps {
-                let value = self.device.read_sector(x + i, &mut buf)?;
-            } 
+                    for i in 0..num_ps {
+                        let value = self.device.read_sector(x + i, &mut buf)?;
+                    } 
 
-            self.cache.insert(sector, CacheEntry {data:buf, dirty: true});
+                    self.cache.insert(sector, CacheEntry {data:buf, dirty: false});
 
-            let mut data1 = &buf[..];
-            Ok(&mut data1)
-
-                }
-
-            }
-            //read the entire physical sector
-            //need to find the number of physical sector by the logical sector
+                    //read the entire physical sector
+                    //need to find the number of physical sector by the logical sector
            
-        } else {
+                },
+            }
+        }
+            
             let mut cacheentry = self.cache.get_mut(&sector).unwrap();
             cacheentry.dirty = true;
-            let mut data1 = &cacheentry.data[..];
+            let data1 = cacheentry.data.as_mut_slice();
 
             // convert vec<u8> to [u8]
-            Ok(&mut data1)
-        }
+            Ok(data1)
+        
         
         
     }
@@ -140,7 +137,7 @@ impl CachedPartition {
             
             let physical_sector = self.virtual_to_physical(sector);
             if physical_sector == None {
-                return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not determine physical sector"));
+                return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not determine physical sector in get function"));
             }
 
             let physical_sec = physical_sector.unwrap();
@@ -156,16 +153,15 @@ impl CachedPartition {
 
             self.cache.insert(sector, CacheEntry {data:buf, dirty: false});
 
-            let data1 = &buf[..];
-            Ok(data1)
-        } else {
+        }
+
             let mut cacheentry = self.cache.get(&sector).unwrap();
             //cacheentry.dirty = true
             let data1 = &cacheentry.data[..];
 
             // convert vec<u8> to [u8]
             Ok(&data1)
-        }
+        
         
     }
 

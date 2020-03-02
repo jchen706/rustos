@@ -50,7 +50,7 @@ impl FatEntry {
         }
     }
 
-    pub 
+
 }
 
 impl fmt::Debug for FatEntry {
