@@ -1,0 +1,1 @@
+In the MBR, the last byte of the sectors are 0x55AA in little endian if the sector is 512 bytes. That is how you determine if the sector  is a valid MBR.

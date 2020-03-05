@@ -4,6 +4,8 @@ use core::mem::size_of;
 use core::str;
 
 use alloc::vec::Vec;
+use alloc::string::String;
+
 
 use shim::io;
 use shim::ioerr;
@@ -88,9 +90,20 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
         let data_start = ebpb.get_number_FAT() as u64 * sect_per_fat as u64 + fat_start;
 
         //number of sectors in parition = sectors of fat + sectors of clutster
+        let mut num12 = ebpb.get_total_sector() as u64;
+        if num12 <= 65535 {
+            num12 = ebpb.logical_sector() as u64;
+            if num12 == 0 {
+                num12 = ebpb.get_total_sector() as u64;
+            }
+        }
+
+
+
+
         let partition1 = Partition {
             start: bpb_sector as u64,
-            num_sectors: sect_per_fat as u64 * ebpb.get_number_FAT() as u64 + sect_per_cluster as u64,
+            num_sectors: num12 as u64,
             sector_size: bytes_per_sector as u64,
 
         };
@@ -127,62 +140,109 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
            offset: usize,
            buf: &mut [u8]
        ) -> io::Result<usize> {
-
+        
         //check for the valid of cluster number 
         if cluster.get_clusterValue() < 2 {
+            //println!("Cluster Value ERRor: {:?}", cluster.get_clusterValue() );
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "Cluster is less than 2"));
         }
 
+     
 
-        // cluster
-        //gets the sector 
-        let cluster_start = self.data_start_sector + (cluster.get_clusterValue() as u64 -2) * self.sectors_per_cluster as u64;
-
-        let sector_offset = offset / self.bytes_per_sector as usize;
-
-        let mut byte_offset = offset % self.bytes_per_sector as usize;
+        //println!("Inside Cluster  Reading  Function {:?}", "Hello");
+        let cluster_start = self.data_start_sector + ((cluster.get_clusterValue()-2) as u64) * self.sectors_per_cluster as u64;
 
 
+
+
+
+        // // cluster
+        // //gets the sector 
+
+        let mut sector = offset / self.bytes_per_sector as usize;
+
+        let mut byte_offset = offset as u64 % self.bytes_per_sector as u64;
+
+
+        let bytes_left:u64 = self.sectors_per_cluster as u64 * self.bytes_per_sector as u64  - offset as u64;
 
         //get the entry of the of fat32 which contains the next 
 
+
+
         //number of bytes to read from the sector 
-        let mut bytesread:usize = 0;
+        let mut bytesread:u64 = 0;
 
         //buf len or whole cluster 
 
         //read all the sectors in the cluster 
+        let mut bytes_need:u64 = 0;
+
+        // bytes need to be read 
+        if (buf.len() as u64) < bytes_left {
+            bytes_need = buf.len() as u64;
+        } else {
+            bytes_need = bytes_left;
+        }
+
+
+
         loop {
 
 
             //current sector
-            let mut sector = sector_offset + (bytesread / self.bytes_per_sector as usize); 
+            //let mut sector = sector_offset + (bytesread / self.bytes_per_sector as usize); 
 
 
             //exit the loop
-            if (sector >= self.sectors_per_cluster as usize) {
+            if (sector >= self.sectors_per_cluster as usize) || bytesread >= bytes_need{
                 break;
-            }
-
+            } else {
 
             //current byte offset
-            byte_offset = (offset + bytesread) % self.bytes_per_sector as usize;
-
+            //
             //read from a sector
-            let value:&[u8] = self.device.get(cluster_start + sector_offset as u64)?; 
+           //println!("Cluster Start + sector {:?}", cluster_start + sector as u64);
+            //println!("Cluster Start + sector times bytes per sector {:?}", (cluster_start + sector as u64)* self.bytes_per_sector as u64);
+
+
+            let value:&[u8] = self.device.get(cluster_start + sector as u64)?; 
+
+
+            let end = if bytes_need - bytesread <  self.bytes_per_sector as u64 - byte_offset {
+                bytes_need - bytesread
+
+            } else {
+                self.bytes_per_sector as u64 - byte_offset
+            };
+
+            //println!("Byte Offset Value + end {:?}", byte_offset + end);
+            sector+=1;
+
 
             //size of return
-            let mut sector_size = value.len() as usize- byte_offset;
+            let mut sector_size = value.len();
+            //println!("Value Read Size: {:?}", sector_size);
 
             //copy to the buf
-            buf[bytesread..bytesread + sector_size].copy_from_slice(&value[byte_offset..]);
+            buf[bytesread as usize..(bytesread + end) as usize].copy_from_slice(&value[byte_offset as usize..(byte_offset+ end) as usize]);
+
+            //println!("Buffer Length: {:?}", buf.len());
 
             //add the number of bytes read
-            bytesread += sector_size;
+            bytesread += end;
+            //sector = sector  + (bytesread / self.bytes_per_sector as u64) as usize;
+            byte_offset = (offset as u64 + bytesread) % self.bytes_per_sector as u64;
+
+           // println!("Total Bytes Read: {:?}", bytesread);
+            //println!("Sector Value {:?}", sector);
+            //println!("Byte Offset Value {:?}", byte_offset);
 
 
 
 
+
+            }
            
         
         }
@@ -192,7 +252,6 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
         Ok(bytesread as usize) 
    }
     
-
 
 
     //  * A method to read all of the clusters chained from a starting cluster
@@ -210,48 +269,64 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
 
         //break on Eoc, or invalid reserve, bad, status
 
+        //println!("Inside Cluster  Reading  Chaining  Function {:?}", start.get_clusterValue());
+
 
         if start.get_clusterValue() < 2 {
+             //println!("Cluster value in read chain: {:?}", start.get_clusterValue() );
+
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "Cluster is less than 2"));
         }
 
 
-        // cluster
+        //cluster
         //gets the sector 
-        let cluster_start = self.data_start_sector + (start.get_clusterValue() as u64 -2) * self.sectors_per_cluster as u64;
+        let cluster_start = self.data_start_sector + (start.get_clusterValue() as u64) * self.sectors_per_cluster as u64;
 
 
         //4
-        let mut cluster_current = cluster_start;
+        let mut cluster_current = start; 
 
         let mut bytesread = 0;
+       
+        let mut number_of_clusters = 0;
+         
 
         loop {
             //
-            
+            number_of_clusters+=1;
 
-            //read 4
-            let mut byte_size = self.read_cluster(Cluster::from(cluster_current as u32), 0, &mut buf[bytesread..])?;
+            let mut newwrite_size = (number_of_clusters*self.sectors_per_cluster as u64 * self.bytes_per_sector as u64) as usize;
+            
+            buf.resize(newwrite_size, 0);
+
+          
+              //read 4
+            let mut byte_size = self.read_cluster(cluster_current, 0, &mut buf[bytesread..])?;
+            
 
             bytesread += byte_size as usize;
 
-            match self.fat_entry(Cluster::from(cluster_current as u32))?.status() {
+            match self.fat_entry(cluster_current)?.status() {
                 Status::Data(x) => {
 
-                    cluster_current = x.get_clusterValue() as u64;
+                    cluster_current = x;
+                    //println!("Current Cluster {:?}", x );
                 },
                 Status::Eoc(y) => {
                     //byte_size = self.read_cluster(Cluster::from(cluster_current as u32), 0, &mut buf[bytesread..])?;
                     //bytesread += byte_size as usize;
+                    return Ok(bytesread);
                     break;
                 },
                 _ => {
-
+                    return Err(io::Error::new(io::ErrorKind::InvalidInput, "Fat entry determine invalid entry"));
                     //mabye Err
                     break;
                 }
 
             }
+           
 
         }
 
@@ -280,83 +355,74 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
         //break on Eoc, or invalid reserve, bad, status
 
 
+        // cluster
+        //gets the sector 
+
+        //call cluster
+
+        //then call cluster chaiin
+        
         if start.get_clusterValue() < 2 {
+             //println!("Cluster value in read chain: {:?}", start.get_clusterValue() );
+
             return Err(io::Error::new(io::ErrorKind::InvalidInput, "Cluster is less than 2"));
         }
 
+        //println!("Cluster value in read chain offset: {:?}", start.get_clusterValue() );
 
-        // cluster
+        //cluster
         //gets the sector 
-        let mut cluster_start = self.data_start_sector + (start.get_clusterValue() as u64 -2) * self.sectors_per_cluster as u64;
-
-        let mut sector_offset = offset / self.bytes_per_sector as u64;
+        let cluster_start = self.data_start_sector + (start.get_clusterValue() as u64) * self.sectors_per_cluster as u64;
 
 
+        //4
+        let mut cluster_current = start; 
 
-        //offset    //bytes per cluster 
-        let mut cluster_offset = offset / (self.sectors_per_cluster as u64 * self.bytes_per_sector as u64);
 
-        //starting cluster with offset 
-        cluster_start = cluster_start + cluster_offset;
 
-        //byte offset 
-        let byte_offset = offset % self.bytes_per_sector as u64;
-
-        let mut cluster_current = cluster_start;
+        let bytes_read_from_offset = 0; 
 
         let mut bytesread = 0;
-
-
-        //the the offset cluster
-        let byte_size1 = self.read_cluster(Cluster::from(cluster_current as u32) , byte_offset as usize, &mut buf[bytesread..])?;
-
-
-        
-        bytesread+= byte_size1;
-
-        //read 2
-
-
-        //get 4
-
-
-
+       
+        let mut number_of_clusters = 0;
+         
 
         loop {
+            //
+            number_of_clusters+=1;
+            let mut newwrite_size = (number_of_clusters*self.sectors_per_cluster as u64 * self.bytes_per_sector as u64) as usize;
+            buf.resize(newwrite_size, 0);
 
-            //let fat_entry1 = self.fat_entry(Cluster::from(cluster_current as u32))?; //get 4
+          
+              //read 4
+            let mut byte_size = self.read_cluster(cluster_current, 0, &mut buf[bytesread..])?;
+            
 
+            bytesread += byte_size as usize;
 
-
-
-            match  self.fat_entry(Cluster::from(cluster_current as u32))?.status() {
+            match self.fat_entry(cluster_current)?.status() {
                 Status::Data(x) => {
-                    cluster_current = x.get_clusterValue() as u64;
+
+                    cluster_current = x;
                 },
                 Status::Eoc(y) => {
                     //byte_size = self.read_cluster(Cluster::from(cluster_current as u32), 0, &mut buf[bytesread..])?;
                     //bytesread += byte_size as usize;
+                    return Ok(bytesread);
                     break;
                 },
                 _ => {
-
+                    return Err(io::Error::new(io::ErrorKind::InvalidInput, "Fat entry determine invalid entry"));
                     //mabye Err
-                    break;
+                    //break;
                 }
 
             }
-
-
-            let mut byte_size = self.read_cluster(Cluster::from(cluster_current as u32), 0, &mut buf[bytesread..])?;
-            bytesread += byte_size as usize;
-
+           
 
         }
 
         Ok(bytesread)
-
-
- 
 
 
     
@@ -382,25 +448,23 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
         //get the logical sector specified by the ebpb to physical sectors 
         //virtual to physical
         //logical sector number 
-
+        //println!("{:?}", "here" );
     
-        let value:&[u8] = self.device.get(fat_sector_num)?;
+        let value = self.device.get(fat_sector_num)?;
 
-        let f_entry = unsafe{value.cast()};
+        //let f_entry: &[FatEntry] = unsafe{value.cast()};
 
-        Ok(&f_entry[0])
 
+        Ok(unsafe {&value[fat_entry_offset as usize..(fat_entry_offset as usize+4)].cast()[0]})
 
        }
 
 
        pub fn map_cluster_entry(&self, num: u32)-> (u64, u64) {
-            if(num < 2) {
-                panic!("{:?}","here");
-            }
+           
 
-            let fatsecnum =  self.fat_start_sector + (num as u64 * 4) / (self.bytes_per_sector as u64);   
-            let fatentryoffset = (num as u64 *4) % self.bytes_per_sector as u64;
+            let fatsecnum =  self.fat_start_sector + ((num) as u64 * 4) / (self.bytes_per_sector as u64);   
+            let fatentryoffset = ((num) as u64 *4) % self.bytes_per_sector as u64;
             (fatsecnum, fatentryoffset)
        }
 
@@ -421,6 +485,7 @@ impl<'a, HANDLE: VFatHandle> FileSystem for &'a HANDLE {
         //get the root cluster
         let path1 = path.as_ref().components();
 
+
         if !path.as_ref().is_absolute() {
             return Err((io::Error::new(io::ErrorKind::InvalidInput,"Not a Absolute Path")));
         }
@@ -429,6 +494,7 @@ impl<'a, HANDLE: VFatHandle> FileSystem for &'a HANDLE {
 
         //have the root directory, taverse from the root
         //need the root entry
+        //println!("File System Path Components # {:#?}", root_dir);
 
         
 
@@ -438,7 +504,7 @@ impl<'a, HANDLE: VFatHandle> FileSystem for &'a HANDLE {
                      // FIXME: Fill me in.
                      //first cluster
                     start_cluster: root_dir,
-                    name: "/".to_string(),
+                    name: String::from("/"),
                     metadata: Metadata::default(),
             }); 
 
@@ -448,15 +514,6 @@ impl<'a, HANDLE: VFatHandle> FileSystem for &'a HANDLE {
             match components {
 
 
-
-                    // Component::RootDir => {
-
-                    // },
-                    // // A reference to the current directory, i.e., `.`.
-                    // Componet::CurDir=> {},
-
-                    // // A reference to the parent directory, i.e., `..`.
-                    // Component::ParentDir=> {},
 
                     // A normal component, e.g., `a` and `b` in `a/b`.
                     //
@@ -472,12 +529,12 @@ impl<'a, HANDLE: VFatHandle> FileSystem for &'a HANDLE {
                         //     _ => {return Err(io::Error::new(io::ErrorKind::NotFound, "File Not Found"));},
 
                         // };
+                        //println!("Normal File Component {:?}", components.as_os_str());
+
 
                         current_dir = current_dir.into_dir().ok_or(io::Error::new(io::ErrorKind::NotFound, "File not Found"))?.find(file_dir)?;
 
-                        
-
-
+                    
 
                         },
                         _=> {},
@@ -486,9 +543,10 @@ impl<'a, HANDLE: VFatHandle> FileSystem for &'a HANDLE {
 
 
 
-            }
+        }
 
-            Ok(current_dir)       
+        
+        Ok(current_dir)       
 
 
     }

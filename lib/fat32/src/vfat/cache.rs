@@ -28,6 +28,10 @@ pub struct CachedPartition {
 }
 
 impl CachedPartition {
+
+    pub fn sector_size(&self)-> u64 {
+        self.partition.sector_size
+    }
     /// Creates a new `CachedPartition` that transparently caches sectors from
     /// `device` and maps physical sectors to logical sectors inside of
     /// `partition`. All reads and writes from `CacheDevice` are performed on
@@ -97,12 +101,14 @@ impl CachedPartition {
                 return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not determine physical sector in get mut function"));
                 },
                 Some(x) => {
+                    let physical_section = physical_sector.unwrap();
+
 
                      let num_ps = self.factor();
                      let mut buf:Vec<u8> = Vec::new();
 
                     for i in 0..num_ps {
-                        let value = self.device.read_sector(x + i, &mut buf)?;
+                        let value = self.device.read_sector(physical_section + i, &mut buf)?;
                     } 
 
                     self.cache.insert(sector, CacheEntry {data:buf, dirty: false});
@@ -140,15 +146,15 @@ impl CachedPartition {
                 return Err(io::Error::new(io::ErrorKind::InvalidData, "Could not determine physical sector in get function"));
             }
 
-            let physical_sec = physical_sector.unwrap();
+            let physical_section = physical_sector.unwrap();
 
             //read the entire physical sector
             //need to find the number of physical sector by the logical sector
             let num_ps = self.factor();
-            let mut buf:Vec<u8> = Vec::new();
+            let mut buf = Vec::new();
 
             for i in 0..num_ps {
-                let value = self.device.read_sector(physical_sec + i, &mut buf)?;
+                let value = self.device.read_all_sector(physical_section + i, &mut buf)?;
             } 
 
             self.cache.insert(sector, CacheEntry {data:buf, dirty: false});
@@ -166,7 +172,6 @@ impl CachedPartition {
     }
 
 
-    //pub fn read_disk(&mut self, sector: u64) -> 
 
 
 

@@ -1,0 +1,1 @@
+The rust compiler cannot determine the syntax and logical safety of foreign code. Rust compiler can only determine if Rust syntax rules are followed. Calling foreign functions, Rust mangles the function symbols exported from the functions location. Therefore, Rust does not know if the symbols are correct in the namespace. Thus, rust can't determine if foreign function is safe.

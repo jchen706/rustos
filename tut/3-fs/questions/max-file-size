@@ -1,0 +1,1 @@
+The max file size is 4294967295 bytes. To determine this, we have the 2^32 - 1 bin size, in our implementation for the bin allocator. We can determine this by multiplying bytes per sector times the sector per cluster times the number of clusters available in the data region.

@@ -1,0 +1,1 @@
+You can determine if an entry is long file name if attributes is of the unknown entry is  self.attributes == 0x0F. Offset Byte 11 of the Unknown File Entry in the Directory.

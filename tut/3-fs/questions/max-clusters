@@ -1,0 +1,2 @@
+The max number of  cluster  id's a fat32 can contain is the difference between 0xFFFFFEF and 0x2.The calculation is 4294967279 - 2. 
+The max cluster in a FAT32 volume is 268435445. 

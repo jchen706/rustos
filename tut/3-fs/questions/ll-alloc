@@ -1,0 +1,1 @@
+We used an intrustive list because we can easily referece the next addressed in memory. Since we are allocating memory. Using a memory allocated linked list will required more complex operation such as spittling memory into region where the linkedlist is and where the data is. With an instrusive linked list, we know the data and the address of the pointer in the node.

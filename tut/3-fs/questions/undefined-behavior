@@ -1,0 +1,1 @@
+I think the an undefined behavior is allowing the structs to be public in my implemenation which can cause some security vulnerability.

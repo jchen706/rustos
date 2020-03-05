@@ -19,13 +19,13 @@ pub struct BiosParameterBlock {
     reserved_sector: u16,  //16
     number_fat: u8,         //17
     directory_entries: [u8;2],  //19
-    total_logical_sectors: [u8;2], //21
+    total_logical_sectors: u16, //21
     fat_id : u8,                      //22
     sector_per_FAT: [u8;2],            //24
     sector_per_track: [u8;2],      //26
     heads_str_media: [u8;2],          //28  
     hidden_sectors: [u8;4],        //32
-    logical_sectors: [u8;4],  //36
+    logical_sectors: u32,  //36
     size_FAT_sectors: u32,        //40
     flags: [u8;2],        //42 
     version_number: [u8;2],  //44
@@ -72,6 +72,15 @@ impl BiosParameterBlock {
         self.number_fat
     }
 
+    pub fn get_total_sector(&self)-> u32 {
+        self.logical_sectors
+    }
+
+    pub fn logical_sector(&self)->u16 {
+        self.total_logical_sectors
+    }
+
+
 
 
 
@@ -107,7 +116,7 @@ impl BiosParameterBlock {
 impl fmt::Debug for BiosParameterBlock {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("BiosParameterBlock")
-        	.field("partition_signature", &self.partition_signature)
+        	.field("partition_signature", &{self.partition_signature})
             .finish()
 
 

@@ -48,17 +48,7 @@ impl Allocator {
         
         let mut list1:[LinkedList; 30] = [LinkedList::new(); 30];
 
-       // unsafe {
-       //      list1[0].push(start as *mut usize);
-       // }
-       // let mut dummy_start = start;
 
-       // unsafe {
-       //      for i in 1..30 {
-       //          dummy_start += equal_size;
-       //          list1[i].push(dummy_start as *mut usize); 
-       //      }
-       //  }
 
        Allocator {
         list: list1,
@@ -77,7 +67,7 @@ impl Allocator {
 
 
         let mut count = 0;
-        println!("{:?}", size );
+        //println!("{:?}", size );
 
         let mut next_power = size.next_power_of_two();
 
@@ -96,7 +86,7 @@ impl Allocator {
             bin_number = count - 3;
         }
 
-        println!("{:?}", count);
+        //println!("{:?}", count);
         (bin_number, 1<<(count))
 
 
@@ -153,12 +143,16 @@ impl LocalAlloc for Allocator {
         let mut change_size = false;
         if layout.size() < layout.align() {
              max_size = layout.align();
-             println!("{:?}", "align changed" );
+            // println!("{:?}", "align changed" );
              change_size = true;
         }
         
 
         let (bin_num , nearest_size) = Allocator::map_to_bin(max_size);
+        //println!("nearest size{:?}", nearest_size);
+        //println!("determine bin {:?}", bin_num);
+
+
 
         // if change_size {
         //     let mut x1 = Allocator::map_to_bin(max_size);
@@ -174,17 +168,98 @@ impl LocalAlloc for Allocator {
 
         if is_empty_list {
 
-            // if self.relative_start < self.global_start || self.relative_start > self.global_end {
-            //     return core::ptr::null_mut() as *mut u8;
-            // } else {
+        //     //if self.relative_start < self.global_start || self.relative_start > self.global_end {
+        //     //     return core::ptr::null_mut() as *mut u8;
+        //     // } else {
 
 
 
-                //loop through all the bins
-                //if the bin not empty merge the size
+        //         //loop through all the bins
+        //         //if the bin not empty merge the size
 
-                
+        //         if bin_num + 1 < 30 {
 
+        //             //println!("BIN NUMBER {:?}", bin_num);
+
+        //             for i in (bin_num+1)..self.list.len() {
+
+        //                  if !self.list[i].is_empty() {
+        //                     let based1:u64 = 2;
+
+        //                     let  size_chunks = based1.pow(i as u32 +3);
+
+
+        //                 //split it to separate chunks
+        //                     let large_address: *mut usize = self.list[i].pop().unwrap();
+
+        //                     //println!(" larger address number {:?}", large_address  as u64);
+        //                     let mut new_start_addr = align_up(large_address as usize, layout.align());
+        //                     //println!(" new starter address{:?}", new_start_addr );
+
+        //                     let next_start = new_start_addr.saturating_add(nearest_size);
+
+        //                     //let dividedparts = size_chunks / nearest_size as u64;
+        //                     let mut new_starter = new_start_addr as u64;
+        //                     let mut size_chunks1 = size_chunks - nearest_size as u64;
+
+
+        //                     let base2:u64 = 2;
+
+        //                     for j in (3..30).rev() {
+
+        //                         if size_chunks1 <= based1.pow(i as u32) {
+        //                             continue;
+        //                         } else {
+        //                             self.list[i].push(new_starter as *mut usize);
+        //                             size_chunks1-= based1.pow(i as u32);
+        //                             new_starter += based1.pow(i as u32);
+
+
+        //                         }
+
+
+
+        //                     }
+
+
+
+        //                     // for j in 0.. dividedparts - 1 {
+
+
+
+        //                     //      new_starter += nearest_size;
+
+        //                     //      self.list[bin_num].push(new_starter as *mut usize);
+        //                     //      //println!("new starter {:?}", new_starter);
+
+
+        //                     // }
+                            
+        //                     //println!("Size chunks {:?}", size_chunks);
+        //                     //println!("larger bin_number {:?}", i);
+        //                     //println!("subtraction {:?}", size_chunks as usize - nearest_size);
+
+
+
+
+        //                     //let (next_bin, next_nearest_size1) = Allocator::map_to_bin(size_chunks as usize - nearest_size);
+
+        //                     //self.list[next_bin].push(next_start as *mut usize);
+
+        //                     //println!("GLOBAL NEXT bin: {0}, nearest size1: {1}, size: {2}, align: {6}, pop relative_start: {3}, start_addr: {4}, next_start: {5}", bin_num, nearest_size, layout.size(), large_address as usize, new_start_addr, next_start, layout.align());
+
+
+        //                     return new_start_addr as *mut u8;
+
+
+                   
+
+        //                 }
+
+        //             }
+        //         }
+                //loop through the bins
+                //loop 
 
 
 
@@ -262,8 +337,87 @@ impl LocalAlloc for Allocator {
             max_size = layout.align();
         }
 
+
         //find max of size and alisgn
-        let (bin_num , nearest_size) = Allocator::map_to_bin(max_size);
+        let (mut bin_num , mut nearest_size) = Allocator::map_to_bin(max_size);
+
+        //same 
+        //merge bins. 
+
+        // let based:u64 = 2;
+
+
+        // let mut pointer = ptr as usize;
+
+
+        // // //merge the bins together
+        // let mut found = false;
+        // for i in 3..self.list.len() {
+
+        //     for each in self.list[i].iter_mut() {
+
+        // // //         //each is type linked list node
+        // // //         //let x1:() = each;
+        //           let size_chunks = based.pow(i as u32);
+        // //          println!("{:?}", each.value());
+        //           if ptr as usize + nearest_size == each.v`alue() as usize{
+
+        // //              //pop off for merging
+
+        //                 if nearest_size >= based.pow(32 as u32) as usize {
+        //                     found = true;
+        //                     break
+        //                 }
+        //                 let large_address: *mut usize = each.pop();
+
+
+        // //              //get the new size, map to new bin
+
+        //                 let (new_bin,new_size) = Allocator::map_to_bin(nearest_size + size_chunks as usize);
+
+        //                 nearest_size += size_chunks as usize;
+        // //              //push the new merged block into the bin
+
+        //                 bin_num = new_bin;
+        //                 //pointer = (pointer as usize + size_chunks as usize);
+        //             }
+        //         }
+
+        //         if found {
+        //              break;
+        //          }
+        //      }
+
+
+
+
+         self.list[bin_num].push(ptr as *mut usize);
+
+
+
+
+
+        //          }
+
+       
+
+
+
+
+        //     }
+
+
+
+
+        //  }
+
+        //cases for the lowest level of the address
+
+
+        //merge the nearest addresses based on bin_size
+
+
+
 
 
         //println!("PUSH INTO bin: {0}, nearest size: {1}, size: {2}, align: {4}, relative_start: {3}", bin_num, nearest_size, layout.size(), self.relative_start, layout.align());
@@ -272,7 +426,7 @@ impl LocalAlloc for Allocator {
 
 
 
-        self.list[bin_num].push(ptr as *mut usize);
+        //self.list[bin_num].push(ptr as *mut usize);
 
 
 
@@ -284,10 +438,10 @@ impl fmt::Debug for Allocator {
     fn fmt(&self, f: &mut fmt::Formatter<'_> )-> fmt::Result {
         writeln!(f, "Bin Allocator Test")?;
 
-        writeln!(f, "self.global_start: {}", self.global_start)?;
-        writeln!(f, "self.global_end: {}", self.global_end)?;
-        writeln!(f, "self.relative_start: {}", self.relative_start)?;
-        writeln!(f, "self.total_size: {}", self.total_size)?;
+        writeln!(f, "self.global_start: {}", &{self.global_start})?;
+        writeln!(f, "self.global_end: {}", &{self.global_end})?;
+        writeln!(f, "self.relative_start: {}", &{self.relative_start})?;
+        writeln!(f, "self.total_size: {}", &{self.total_size})?;
 
       
 

@@ -128,9 +128,9 @@ impl fmt::Debug for MasterBootRecord {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("MasterBootRecord")
             //.field("bootstrap", &self.bootstrap)
-            .field("unique_id", &self.unique_id)
+            .field("unique_id", &{self.unique_id})
             .field("partition_table", &self.partition_table)
-            .field("signature", &self.signature)
+            .field("signature", &{self.signature})
             .finish()
     }
 }

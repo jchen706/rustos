@@ -14,6 +14,8 @@ use crate::vfat::{Cluster, Entry, File, VFatHandle, Error};
 use core::char::decode_utf16;
 use core::char::REPLACEMENT_CHARACTER;
 
+//use kern::src::console::kprintln;
+
 
 #[derive(Debug)]
 pub struct Dir<HANDLE: VFatHandle> {
@@ -69,23 +71,6 @@ impl VFatRegularDirEntry {
     // add code here
 
 
-    // pub fn file_name(&self) -> &str {
-    //     let mut v:Vec<u8> = Vec::new();
-    //     v.extend_from_slice(&self.file_name)
-    //     let string_u = String::from_utf8(v).unwrap().trim_right();
-    //     let mut e:Vec<u8> = Vec::new();
-    //     e.extend_from_slice(&self.file_extension)
-    //     let string_ext = String::from_utf8(e).unwrap.trim_right();
-
-    //     if self.file_extension.len() > 0 {
-    //         string_u.push_str(&".");
-    //         string_u.push_str(string_ext);
-    //         return string_u;
-    //     }
-
-    //     &string_u
-
-    // }
 
 
     pub fn cluster_num(&self)-> Cluster {
@@ -125,49 +110,6 @@ pub struct VFatLfnDirEntry {
 impl VFatLfnDirEntry {
 
 
-    // pub fn file_name(&self) ->  {
-
-    //     ///vec
-
-    //     let mut v:Vec<u16> = Vec::new();
-    //     v.extend_from_slice(&self.name_chars)
-    //     let string_u = String::from_utf16(v).unwrap();
-        
-    //     if self.second_name_chars.len() > 0 {
-    //         string_u.push_str(self.second_name_chars);
-    //     } 
-
-    //     if self.third_name_chars.len() > 0 {
-    //         string_u.push_str(self.third_name_chars);
-    //     }
-
-    //     string_u
-
-    // }
-
-
-    // pub fn determine_termination(&self)->(usize, usize, usize) {
-    //     let index1 = 0;
-    //     let index2 = 0;
-    //     let index3 = 0;
-
-    //     for i in 0..self.name_chars.len() {
-    //         if self.name_chars[i] == 0x00 || self.name_chars[i] == 0xFF {
-    //             index1 = i;
-    //         }
-    //     }
-
-    //     for i in 0..self.second_name_chars.len() {
-    //         if self.name_chars[i] == 0x00 || self.name_chars[i] == 0xFF {
-    //             index2 = i;
-    //         }
-    //     }
-
-    //      for i in 0..self.third_name_chars.len() {
-    //         if self.name_chars[i] == 0x00 || self.name_chars[i] == 0xFF {
-    //             index3 = i;
-    //         }
-    //     }
 
 
 
@@ -175,7 +117,7 @@ impl VFatLfnDirEntry {
 
 
 
-    // }
+    
 
 
     pub fn is_dir(&self)-> bool {
@@ -245,6 +187,9 @@ impl<HANDLE: VFatHandle> Dir<HANDLE> {
     /// If `name` contains invalid UTF-8 characters, an error of `InvalidInput`
     /// is returned.
     pub fn find<P: AsRef<OsStr>>(&self, name: P) -> io::Result<Entry<HANDLE>> {
+
+        //println!("Inside Find Function in Dir:{:?}", name.as_ref().to_str());
+
         
         let string_name = match name.as_ref().to_str() {
             None=> return Err((io::Error::new(io::ErrorKind::InvalidInput, "Path is InvalidInput"))),
@@ -256,8 +201,12 @@ impl<HANDLE: VFatHandle> Dir<HANDLE> {
         use traits::Entry;
         for each in self.entries()? {
 
+            //println!("Enty Name in LOOP: {:?}", each.name());
+
 
             if string_name.eq_ignore_ascii_case(each.name()) {
+                //println!("Return OK Inside Find Function in Dir:{:?}", each.name());
+
                 return Ok(each);
             }
         }
@@ -285,6 +234,10 @@ impl<HANDLE:VFatHandle> Iterator for EntryIterator<HANDLE> {
     fn next(&mut self) -> Option<Self::Item> {
 
 
+        //println!("Inside Next Function in Dir{:?}","NEXT");
+
+
+
         //fetch entry
         let mut lfn_list = [0u16; 13*31];
         let mut is_lfn = false;
@@ -292,13 +245,15 @@ impl<HANDLE:VFatHandle> Iterator for EntryIterator<HANDLE> {
 
         loop {
 
-            if(self.current > self.entries.len()) {
+            if(self.current >= self.entries.len()) {
                 return None
             } else {
 
+                //println!("Inside Next Function in Dir{:?}","  IN THE LOOP ");
+
 
                 let entry = &self.entries[self.current];
-                let unknown = unsafe {entry.unknown};
+                let unknown = unsafe {&{entry.unknown}};
 
                 //check for valid
                 if unknown.is_del_unused() {
@@ -311,29 +266,42 @@ impl<HANDLE:VFatHandle> Iterator for EntryIterator<HANDLE> {
                 }
 
 
+
                 if unknown.is_LFN() {
 
-                    let lfn = unsafe {entry.long_filename};
+
+                    //println!("Inside Next Function in Dir{:?}","  IN THE LOOP ");
+
+
+                    let lfn = unsafe {&{entry.long_filename}};
 
                     //check sequence number 
                     let sequence = lfn.sequence_number & 0b00011111;
 
                     if sequence >= 0x01 && sequence <=0x1F {
+
                         let lfn_index = (sequence-1) as usize;
+                        
                         is_lfn = true;
-                        lfn_list[lfn_index*13..lfn_index*13+5].copy_from_slice(&lfn.name_chars);
-                        lfn_list[lfn_index*13+5..lfn_index*13+11].copy_from_slice(&lfn.second_name_chars);
-                        lfn_list[lfn_index*13+11..lfn_index*13+13].copy_from_slice(&lfn.third_name_chars);
+
+                        lfn_list[lfn_index*13..lfn_index*13+5].copy_from_slice(&{lfn.name_chars});
+
+                        lfn_list[lfn_index*13+5..lfn_index*13+11].copy_from_slice(&{lfn.second_name_chars});
+
+                        lfn_list[lfn_index*13+11..lfn_index*13+13].copy_from_slice(&{lfn.third_name_chars});
 
                     } else {
                     
                     }
 
+                    self.current+=1;
+
+
                 } else {
 
                     //regular 
 
-                    let regular = unsafe{entry.regular};
+                    let regular = unsafe {&{entry.regular}};
 
                       
 
@@ -343,12 +311,32 @@ impl<HANDLE:VFatHandle> Iterator for EntryIterator<HANDLE> {
                         // let decode_string = decode_utf16(lfn_list[..].iter().cloned())
                         // .map(|r| r.map_err(|e| e.unpaired_surrogate())).collect::<Vec<_>>();
 
-                        let decode_string = decode_utf16(lfn_list[..].iter().cloned())
-                        .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER) ).collect::<String>().replace(REPLACEMENT_CHARACTER, "");
+                        let mut counter = 0;
+                
+
+                        for each in lfn_list.iter(){
+                            if *each == 0 {
+                                break;
+                            }
+                            counter+=1;
+                        }
+
+                        let decode_string = decode_utf16(lfn_list[..counter].iter().cloned())
+                        .map(|r| r.unwrap_or(REPLACEMENT_CHARACTER)).collect::<String>().replace(REPLACEMENT_CHARACTER, "");
+
+                        //println!("Inside LFN Dir File Name  {:?}", String::from_utf16_lossy(&lfn_list.to_vec()));
 
 
-                        decode_string
+
+                        //String::from_utf16(&lfn_list[..].to_vec()).unwrap().trim_right().to_string()
+
+
+
+                        //println!("Inside LFN Dir File Name  {:?}", decode_string);
+
                        
+
+                       decode_string
                         
                     } else {
 
@@ -368,23 +356,50 @@ impl<HANDLE:VFatHandle> Iterator for EntryIterator<HANDLE> {
 
                         let mut valid_name = String::from_utf8(name[..last].to_vec()).unwrap();
 
-                        let extension = String::from_utf8(regular.file_extension.to_vec()).unwrap();
 
-                         if regular.file_extension.len() > 0 {
+
+                        let mut last1 = 0;
+                        for chars in 0..regular.file_extension.len() {
+
+                            if regular.file_extension[chars] == 0x00 || regular.file_extension[chars] == 0x20 {
+
+                                break;
+                            } 
+                            last1+=1;
+
+                        }
+
+                        let extension = String::from_utf8(regular.file_extension[..last1].to_vec()).unwrap();
+
+
+                         if extension.len() > 0 {
                           valid_name.push_str(&".");
                           valid_name.push_str(&extension);
                         }
 
+                        valid_name = valid_name;
+
+
+                        //println!("Valid Name  {:?}",valid_name);
+
+
                         valid_name
 
+
+
                     };
+
+
 
                     let cluster1 = Cluster::from(((regular.high_entry_first_cluster_num as u32) << 16) 
                         | regular.low_en_first_cluster_num as u32);
 
+                    //println!("Regular HIgh Value Here {:?}", regular.high_entry_first_cluster_num);
+
+                    //println!("Regular LOW Value Here {:?}", regular.low_en_first_cluster_num);
 
 
-
+                    //println!("Cluster Value Here {:?}", cluster1 );
 
 
                     let metadata1 = Metadata {
@@ -404,10 +419,13 @@ impl<HANDLE:VFatHandle> Iterator for EntryIterator<HANDLE> {
 
                     };
 
-                    
+                    self.current+=1;
+
 
 
                     if regular.is_dir() {
+                        //println!("Directory Cluster Value {:?}", cluster1 );
+
                         return Some(Entry::Dir(Dir{
                             vfat:self.vfat.clone(),
                             name: string_name,
@@ -416,6 +434,8 @@ impl<HANDLE:VFatHandle> Iterator for EntryIterator<HANDLE> {
                         }));
 
                     } else {
+                        //println!("File Cluster Value {:?}", cluster1 );
+
                         return Some(Entry::File(File{
                             vfat:self.vfat.clone(),
                             name: string_name,
@@ -454,6 +474,9 @@ impl<HANDLE: VFatHandle> traits::Dir for Dir<HANDLE> {
         let mut vector = Vec::new();
 
         let entrys = self.vfat.lock(|vfat| vfat.read_chain(self.start_cluster, &mut vector));
+        
+
+        //kprintln!("Inside Entries Function in Dir{:?}",entrys);
         match entrys {
             Ok(_)=> {},
             Err(_) => 

@@ -5,6 +5,9 @@ use shim::io::{self, SeekFrom};
 use crate::traits;
 use crate::vfat::{Cluster, Metadata, VFatHandle};
 
+use alloc::vec::Vec;
+
+
 #[derive(Debug)]
 pub struct File<HANDLE: VFatHandle> {
     pub vfat: HANDLE,
@@ -53,6 +56,10 @@ impl<HANDLE: VFatHandle> io::Seek for File<HANDLE> {
         //move within a stream of bytes 
 
         let mut offset = 0;
+
+
+        //println!("Inside Files SEEK Function in Read Chain{:?}", "funtion");
+
         //start(i64)
         match _pos {
 
@@ -156,30 +163,45 @@ impl<HANDLE:VFatHandle> traits::File for File<HANDLE> {
 impl<HANDLE: VFatHandle> io::Read for File<HANDLE> {
 
     fn read(&mut self, buf: &mut [u8])-> io::Result<usize> {
-
-        let mut bytesread = 0;
-
-        if self.current_offset == 0 {
+        
 
 
-            //read chain
-
-
-            bytesread = self.vfat.lock(|vfat| vfat.read_chain(self.start_cluster,&mut buf.to_vec()))?;
-
-        } else {
-
-
-            //read chain with offset 
-
-            bytesread = self.vfat.lock(|vfat| vfat.read_chain_offset(self.start_cluster,self.current_offset,&mut buf.to_vec()))?;
-
-
-
+        if self.size == 0 {
+            return Ok(0);
         }
+
+
+        let mut storage = Vec::new();
+        
+
+        self.vfat.lock(|vfat| vfat.read_chain(self.start_cluster,&mut storage))?;
+
+        //     println!("Inside Files Read Function in Read Chain File Size{:?}", self.size);
+        //     println!("Inside Files Read Function in Read Chain File Size{:?}", self.current_offset);
+
+
+        let current_bytes = self.size - self.current_offset;
+
+
+
+        let bytesread = if current_bytes > buf.len() as u64 {
+            buf.len()
+        }  else {
+            current_bytes as usize
+        };
+
+
+
+        buf[..bytesread as usize].copy_from_slice(&storage[self.current_offset as usize..self.current_offset as usize + bytesread as usize]);
+        
+
+        self.current_offset += bytesread as u64;
+
+
 
         Ok(bytesread as usize)
 
+    
     }
 
 }

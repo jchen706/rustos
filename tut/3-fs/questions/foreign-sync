@@ -1,0 +1,1 @@
+The BlockDevice is thread safe as every operation required a lock when read or writing from the Cache that wraps the underlying Block device. However, since only one thread is operating at a single time. The Sd object is safe.

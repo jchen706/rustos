@@ -3,6 +3,9 @@ use shim::io;
 use shim::ioerr;
 
 use fat32::traits::BlockDevice;
+use pi::timer::spin_sleep;
+
+
 
 extern "C" {
     /// A global representing the last SD controller error that occured.
@@ -23,7 +26,8 @@ extern "C" {
     /// On success, returns the number of bytes read: a positive number.
     ///
     /// On error, returns 0. The true error code is stored in the `sd_err`
-    /// global. `sd_err` will be set to -1 if a timeout occured or -2 if an
+    /// global. `sd_err` will be set to -1             
+    ///if a timeout occured or -2 if an
     /// error sending commands to the SD controller occured. Other error codes
     /// are also possible but defined only as being less than zero.
     fn sd_readsector(n: i32, buffer: *mut u8) -> i32;
@@ -31,6 +35,10 @@ extern "C" {
 
 // FIXME: Define a `#[no_mangle]` `wait_micros` function for use by `libsd`.
 // The `wait_micros` C signature is: `void wait_micros(unsigned int);`
+#[no_mangle]
+pub extern "C" fn wait_micros(micro: u32) {
+    spin_sleep(Duration::from_micros(micro as u64));
+}
 
 /// A handle to an SD card controller.
 #[derive(Debug)]
@@ -43,7 +51,23 @@ impl Sd {
     /// with atomic memory access, but we can't use it yet since we haven't
     /// written the memory management unit (MMU).
     pub unsafe fn new() -> Result<Sd, io::Error> {
-        unimplemented!("Sd::new()")
+        let handle = unsafe {sd_init()};
+
+        if handle == 0 {
+            Ok(Sd{})
+        } else if handle ==-1 {
+            Err(io::Error::new(io::ErrorKind::TimedOut, "SD card has timeout."))
+        } else if handle ==-2 {
+            Err(io::Error::new(io::ErrorKind::InvalidInput, "Error Sending Command"))
+        } else {
+            Err(io::Error::new(io::ErrorKind::Other, "SD Unknown Error"))
+        }
+
+
+        
+
+
+
     }
 }
 
@@ -61,7 +85,51 @@ impl BlockDevice for Sd {
     ///
     /// An error of kind `Other` is returned for all other errors.
     fn read_sector(&mut self, n: u64, buf: &mut [u8]) -> io::Result<usize> {
-        unimplemented!("Sd::read_sector()")
+        
+        let base = 2 as u64;
+
+        if buf.len() < 512 {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Buffer len is less than 512"));
+        } else if n  > (base.pow(31) - 1) {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "Byte number is greater than the max value of i32"));
+
+        } else {
+
+
+            let value = unsafe{ sd_readsector(n as i32, buf.as_mut_ptr())};
+
+            if value > 0 {
+                return Ok(value as usize);
+            } else {
+
+
+
+                let error1 = unsafe{sd_err};
+                if error1 == -1 {
+                    return Err(io::Error::new(io::ErrorKind::TimedOut, "SD card read has timeout."));
+                } else if error1 == -2 {
+                    return Err(io::Error::new(io::ErrorKind::InvalidInput, "Error Sending Command"));
+
+                } else {
+                    return Err(io::Error::new(io::ErrorKind::Other, "SD Unknown Error"));
+
+                }
+                    
+                }
+
+            }
+
+
+            return Err(io::Error::new(io::ErrorKind::Other, "SD Unknown Error"));
+
+
+
+
+
+        
+
+
+
     }
 
     fn write_sector(&mut self, _n: u64, _buf: &[u8]) -> io::Result<usize> {

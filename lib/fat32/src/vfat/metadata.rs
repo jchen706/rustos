@@ -102,29 +102,28 @@ impl Attributes {
 	}
 
 	pub fn read_only(&self) -> bool {
-		self.0 == 0x01
+		self.0 & 0x01 ==0x01
 
     }
 
-    /// Whether the entry should be "hidden" from directory traversals.
     pub fn hidden(&self) -> bool {
-    	self.0 ==0x02
+    	self.0 & 0x02 == 0x02
     }
 
     pub fn system(&self)-> bool {
-    	self.0==0x04
+    	self.0 & 0x04 ==0x04
     }
 
     pub fn volume_id(&self) -> bool {
-    	self.0==0x08
+    	self.0 & 0x08 ==0x08
     }
 
     pub fn directory(&self)-> bool {
-    	self.0==0x10
+    	self.0 & 0x10 == 0x10
     }
 
     pub fn archive(&self)-> bool {
-    	self.0 == 0x20
+    	self.0 & 0x20 == 0x20
     }
 
 }
@@ -187,7 +186,7 @@ impl Metadata {
                              date: Date::new(0).unwrap(),
                             time: Time::new(0).unwrap(),
                         },
-                        attributes: Attributes::new(0x3)
+                        attributes: Attributes::new(0x4)
 		}
 
 	}

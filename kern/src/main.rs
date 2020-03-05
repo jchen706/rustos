@@ -28,11 +28,15 @@ use alloc::string::String;
 
 
 use allocator::Allocator;
-//use fs::FileSystem;
+use fs::FileSystem;
+
+
+//use fat32::traits::FileSystem;
+use fat32::traits::{Dir, Entry};
 
 #[cfg_attr(not(test), global_allocator)]
 pub static ALLOCATOR: Allocator = Allocator::uninitialized();
-//pub static FILESYSTEM: FileSystem = FileSystem::uninitialized();
+pub static FILESYSTEM: FileSystem = FileSystem::uninitialized();
 
 fn kmain() -> ! {
     
@@ -41,7 +45,7 @@ fn kmain() -> ! {
 
     unsafe {
         ALLOCATOR.initialize();
-        //FILESYSTEM.initialize();
+        FILESYSTEM.initialize();
     }
 
     use core::fmt::Write;
@@ -64,6 +68,7 @@ fn kmain() -> ! {
 
 
 
+
     
         // FIXME: Start the shell.
         //
@@ -75,7 +80,9 @@ fn kmain() -> ! {
         // let mut test4 = Gpio::new(19).into_output();
         // let mut test5 = Gpio::new(26).into_output();
 
-
+        //for atags in pi::atags::Atags::get() {
+          //  kprintln!("{:?}", atags);
+        //}
 
         //Gpio::new(15).into_output();
 
@@ -105,7 +112,20 @@ fn kmain() -> ! {
             // spin_sleep(Duration::new(1,0));
             // test5.clear();
 
-            
+            //use fat32::traits::FileSystem;
+            // use fat32::traits::{FileSystem,Dir, Entry};
+
+            // let t = FILESYSTEM.open("/").unwrap();
+            // //kprintln!("{}", t.as_dir().unwrap().entries().unwrap();
+            // for each in t.as_dir().unwrap().entries().unwrap() {
+            //     kprintln!("{:?}", each.name());
+            //    // kprintln!("{:?}", 1);
+                
+                    
+                
+
+
+            // }
 
 
 

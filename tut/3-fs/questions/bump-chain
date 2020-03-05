@@ -1,0 +1,1 @@
+In the backtrace would be first the bump from LocalAlloc.  Then the next thing in the backtrace is between the LocalAlloc and the Vec::resize is the GlobalAlloc with helps locks the Alloc.Vec::resize is need for the dynamically allocation of the heap. Then the Vec::push is the first call from the user.

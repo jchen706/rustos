@@ -181,6 +181,7 @@ fn test_vfat_init() {
     vfat_from_resource!("mock4.fat32.img");
 }
 
+
 fn hash_entry<T: Entry>(hash: &mut String, entry: &T) -> ::std::fmt::Result {
     use std::fmt::Write;
 
