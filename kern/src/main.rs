@@ -59,6 +59,12 @@ fn kmain() -> ! {
 
     String::from("Hi!");
 
+
+    let s1 = String::from("helllo");
+    let s2 = "h";
+    kprintln!("{}",&s2[..]);
+
+
     // const GPIO_BASE: usize = 0x3F000000 + 0x200000;
     //
     // const GPIO_FSEL1: *mut u32 = (GPIO_BASE + 0x04) as *mut u32;

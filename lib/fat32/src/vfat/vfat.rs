@@ -379,7 +379,7 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
         let mut cluster_current = start; 
 
 
-
+        
         let bytes_read_from_offset = 0; 
 
         let mut bytesread = 0;
@@ -389,14 +389,13 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
 
         loop {
             //
-            number_of_clusters+=1;
-            let mut newwrite_size = (number_of_clusters*self.sectors_per_cluster as u64 * self.bytes_per_sector as u64) as usize;
-            buf.resize(newwrite_size, 0);
+           
 
           
               //read 4
             let mut byte_size = self.read_cluster(cluster_current, 0, &mut buf[bytesread..])?;
-            
+            number_of_clusters+=1;
+            let mut newwrite_size = (number_of_clusters*self.sectors_per_cluster as u64 * self.bytes_per_sector as u64) as usize;
 
             bytesread += byte_size as usize;
 
@@ -404,6 +403,8 @@ impl<HANDLE: VFatHandle> VFat<HANDLE> {
                 Status::Data(x) => {
 
                     cluster_current = x;
+                    buf.resize(newwrite_size, 0);
+
                 },
                 Status::Eoc(y) => {
                     //byte_size = self.read_cluster(Cluster::from(cluster_current as u32), 0, &mut buf[bytesread..])?;
