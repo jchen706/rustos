@@ -6,6 +6,8 @@ use crate::process::State;
 use crate::traps::TrapFrame;
 use crate::SCHEDULER;
 use kernel_api::*;
+use pi::timer::current_time;
+use crate::process::Process;
 
 /// Sleep for `ms` milliseconds.
 ///
@@ -15,7 +17,41 @@ use kernel_api::*;
 /// parameter: the approximate true elapsed time from when `sleep` was called to
 /// when `sleep` returned.
 pub fn sys_sleep(ms: u32, tf: &mut TrapFrame) {
-    unimplemented!("sys_sleep()");
+    //unimplemented!("sys_sleep()");
+
+    let start = current_time();
+    let release_time = start.as_micros() + Duration::from_micros(ms as u64 * 1000).as_micros();
+
+//Box<dyn FnMut(&mut Process) + Send> 
+
+   let boxed_fnmut= Box::new(move |p: &mut Process|-> bool {
+
+   	  let time1 = current_time();
+
+   	  if time1.as_micros() >= release_time {
+   	  			let elapsed_time = time1.as_millis() - start.as_millis();
+   	  	   	  	p.context.x[0] =  elapsed_time as u64;
+   	  	   	  	p.context.x[8] =  0;
+   	  	   	  	return true
+
+   	  } else {
+   	  			return false
+
+   	  }
+
+
+
+
+   });
+
+
+   SCHEDULER.switch(State::Waiting(boxed_fnmut), tf);
+
+
+
+
+
+
 }
 
 /// Returns current time.
@@ -58,5 +94,19 @@ pub fn sys_getpid(tf: &mut TrapFrame) {
 
 pub fn handle_syscall(num: u16, tf: &mut TrapFrame) {
     use crate::console::kprintln;
-    unimplemented!("handle_syscall()")
+    //unimplemented!("handle_syscall()")
+
+
+    if num == 1 {
+    	sys_sleep(tf.x[0] as u32,tf);
+    } else {
+    	tf.x[8] = 1;
+    }
+
+
+
+
+
+
+
 }

@@ -1,0 +1,8 @@
+We can use special purpose register to read the CurrentEL form the PSTATE.
+
+msr x1, CurrentEL
+
+
+
+The above instruction will store the current exception level into x1.
+Then you can just read the x1 value to determine the exception level.

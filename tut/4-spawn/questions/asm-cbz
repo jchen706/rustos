@@ -1,0 +1,11 @@
+The cbz instruction compares the valien in the <ra> to zero, branches to the <label> (PC-relative) if <ra> is equal to zero. If the branch is not taken then the execution continues forward. 
+
+You would use it as: 
+
+start: 
+	mov x1, #0
+	cbz x1, end  // branches to end
+middle:
+	mov x3,#4
+
+end:

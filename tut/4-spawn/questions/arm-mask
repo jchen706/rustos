@@ -1,0 +1,6 @@
+To unmask only the IRQ which is the index 7th bit in the SPSR (Saved Process Status Register) , we can set the SPSR[7] = 0.
+
+mrs x1, spsr
+mov x2, #0b11111111111111111111111101111111
+and x1, x1, x2
+msr spsr, x1 

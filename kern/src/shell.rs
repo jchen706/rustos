@@ -19,7 +19,8 @@ use crate::FILESYSTEM;
 
 use pi::timer::spin_sleep;
 use core::time::Duration;
-
+use kernel_api::syscall::sleep;
+use kernel_api::{OsError, OsResult};
 
 
 use crate::alloc::string::ToString;
@@ -71,7 +72,7 @@ impl<'a> Command<'a> {
 
 /// Starts a shell using `prefix` as the prefix for each line. This function
 /// never returns.
-pub fn shell(prefix: &str) -> ! {
+pub fn shell(prefix: &str) {
     //unimplemented!();
     //spin_sleep(Duration::new(5,0));
 
@@ -94,6 +95,7 @@ pub fn shell(prefix: &str) -> ! {
 
 
 
+
     
         //let current_length = 0;
         
@@ -104,6 +106,10 @@ pub fn shell(prefix: &str) -> ! {
         //let mut console1 = CONSOLE.lock();
         //console.write_byte(b'\n');
         //loop through each line
+
+        let mut exitin = false;
+
+
         loop{
     
                 let mut console = CONSOLE.lock();
@@ -128,7 +134,51 @@ pub fn shell(prefix: &str) -> ! {
                                     kprint!("{} ", each);
                                 }
                                 kprint!("{}","\r\n");
-                            } else if a.path() == "pwd" {
+                            } else if a.path() =="sleep" {
+                                kprint!("{}","\r\n");
+
+                                if a.args.len() != 2 {
+                                    kprintln!("Incorrect");
+
+                                    break
+                                }
+
+
+                                match a.args[1].parse::<u64>() {
+                                    Ok(num) => {
+                                        let error1 = sleep(Duration::from_millis(num as u64));
+                                            match error1 {
+
+                                                Ok(_)=> {
+                                                    kprintln!("{}", "Sleep function success");
+
+                                                },
+                                                _=> {
+                                                    kprintln!("{:?}", error1);
+                                                }
+                                            }
+                                    },
+                                    Err(e)=> {
+
+                                        kprintln!("{}", "Input value cannot convert to number.");
+
+                                    },
+                                };
+
+                                
+
+                            }
+
+
+
+                            else if a.path() == "exit" {
+                                kprint!("{}","\r\n");
+                                kprintln!("Exiting");
+                                exitin = true;
+                                break
+
+
+                            }else if a.path() == "pwd" {
 
                                 //let file = FILESYSTEM.open();
 
@@ -500,8 +550,13 @@ pub fn shell(prefix: &str) -> ! {
                     }
                 }
             }
+            if exitin {
+            kprintln!("{:?}", exitin);
+            return
+            }
     
         }
+        
     
     
     }

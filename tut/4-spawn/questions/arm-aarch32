@@ -1,0 +1,1 @@
+The SPRSR bit 4 which is the SPRSR.M, you would want to change that to 1 to indicate execution state as AArch32.

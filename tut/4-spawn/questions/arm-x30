@@ -1,0 +1,1 @@
+The general purpose register is r30. The W30 can be use to read the lower 32 bits of the register. We can use lr link register to accessed the x30. 

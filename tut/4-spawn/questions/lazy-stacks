@@ -1,0 +1,1 @@
+We can use virutal memory to allocate minimal memory used by the stack by have a process with a page or paging files. When more virtual memory is required, a exeception is generated, the operating system add more virtual space to the process or more pages.

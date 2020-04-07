@@ -1,0 +1,20 @@
+Process could increase the memory size by having a function call in the kernel to reset the top of the stack to a lower physical address to double the orginal memory space as long as stack does not overflow.
+
+To do that we need the current memory size which is 2^20.
+
+mov x0 #(2 << 20)
+
+Then 
+
+enlarge:
+
+	add x1, x0, x0 //double the memory
+	mov x0,x1
+
+x0 now has the double memory capacity for allocation.
+The kernel would have to copy the old stack to the new stack and set the pointer to the current pointer.
+
+To copy the old stack we need to loop until the stack bottom of the old stack with the stack pointer. First store the stack pointer to a register.
+
+
+

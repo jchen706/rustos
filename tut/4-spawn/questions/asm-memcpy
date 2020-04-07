@@ -1,0 +1,13 @@
+
+
+Here is memcopy in assembly.
+
+start:
+	ldr x4,[x0],#8  
+	str x4,[x1], #8
+
+
+	sub x2, x2,#8
+	cmp x2,#0
+	bne start
+ret

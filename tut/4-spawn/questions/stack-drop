@@ -1,0 +1,1 @@
+Because the stack structure implements drop, once the stack is out of scope unused, the memory will be drop. The allocator dealloc the stack memory.

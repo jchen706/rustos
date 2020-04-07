@@ -1,0 +1,1 @@
+It will jump to 0x400 because SVC is a synchronous exception at a lower exception level running on AArch64.

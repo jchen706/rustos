@@ -1,0 +1,4 @@
+We do have to maintain the state of whether SIMD/FP is disable or not, 
+
+
+One to save and restore only the registers being used from the callee side. So for the trap frame, 

@@ -1,6 +1,8 @@
 mod frame;
 mod syndrome;
 mod syscall;
+use crate::console::kprintln;
+use crate::shell;
 
 pub mod irq;
 pub use self::frame::TrapFrame;
@@ -9,6 +11,8 @@ use pi::interrupt::{Controller, Interrupt};
 
 use self::syndrome::Syndrome;
 use self::syscall::handle_syscall;
+use aarch64::*;
+use crate::IRQ;
 
 #[repr(u16)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
@@ -41,5 +45,70 @@ pub struct Info {
 /// the trap frame for the exception.
 #[no_mangle]
 pub extern "C" fn handle_exception(info: Info, esr: u32, tf: &mut TrapFrame) {
-    unimplemented!("handle_exception");
+
+    kprintln!("{:?}", info.kind);
+    kprintln!("{:?}", info.source);
+
+    kprintln!("{:?}", esr);
+
+    match info.kind {
+        Kind::Synchronous => {
+            match Syndrome::from(esr) {
+                 Syndrome::Brk(num) => {
+                    kprintln!("brK {:?}", num);
+                    tf.elr+=4;
+                    shell::shell("debug$ ");
+                    kprintln!("returning {:?}", num);
+
+                    return 
+
+
+
+
+                 },
+                 Syndrome::Svc(scall) => {
+                    kprintln!("svc {:?}", scall);
+                    handle_syscall(scall, tf);
+                    return
+
+                 },
+                 _=> {
+
+                     // loop {
+                        //     kprintln!("brK {:?}", "endless loop");
+                        //     aarch64::nop();
+                     // }
+                 },
+             }
+
+        },
+        Kind::Irq => {
+
+            let control = Controller::new();
+            let interrupt1 = Interrupt::iter();
+
+            for each in interrupt1 {
+                if control.is_pending(*each) {
+                    IRQ.invoke(*each, tf);
+
+                }
+            }
+
+
+
+        },
+        Kind::Fiq => {
+
+        },
+        Kind::SError => {
+
+        }
+
+    }
+
+    // loop {
+    //     kprintln!("brK {:?}", "endless loop");
+    //     aarch64::nop();
+    // }
+    
 }

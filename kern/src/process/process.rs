@@ -1,6 +1,7 @@
 use alloc::boxed::Box;
 use shim::io;
 use shim::path::Path;
+use core::mem;
 
 use aarch64;
 
@@ -33,7 +34,35 @@ impl Process {
     /// If enough memory could not be allocated to start the process, returns
     /// `None`. Otherwise returns `Some` of the new `Process`.
     pub fn new() -> OsResult<Process> {
-        unimplemented!("Process::new()")
+
+        //unimplemented!("Process::new()")
+
+        let stack1 = Stack::new();
+        match stack1 {
+
+            Some(x)=> {
+                let trap = TrapFrame::default();
+
+                Ok(
+
+                Process {
+                context:Box::new(trap),
+                stack: x,
+                state: State::Ready,
+                 }
+                )
+
+            },
+            _=> return Err(OsError::NoMemory),
+
+        }
+
+
+       
+
+
+
+
     }
 
     /// Load a program stored in the given path by calling `do_load()` method.
@@ -100,6 +129,45 @@ impl Process {
     ///
     /// Returns `false` in all other cases.
     pub fn is_ready(&mut self) -> bool {
-        unimplemented!("Process::is_ready()")
+        //unimplemented!("Process::is_ready()")
+        match &self.state {
+            State::Ready => return true,
+
+
+            State::Waiting(fab)=> {
+
+                 let mut state1 = mem::replace(&mut self.state, State::Ready);
+
+                    match state1 {
+                        State::Waiting(mut x) => {
+                            let xb = x.as_mut()(self);
+                            if xb {
+                                return true;
+                            } else {
+                                self.state = State::Waiting(x);
+                                return false;
+                            }
+                        },
+                        _=> return false,
+                    }
+
+            }
+
+            _=> return false,
+
+
+        }
+      
+        // if self.state == State::Ready {
+        //     return true;
+        // } else if self.state == State:Waiting(_) {
+           
+
+        // } else {
+        //     return false;
+        // }
+
+
+
     }
 }

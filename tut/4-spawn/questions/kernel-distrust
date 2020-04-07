@@ -1,0 +1,4 @@
+The kernel manages, executes, and protects the code and data in the process. So the process trusts the kernel to not contaminate the process, thus isolate it from other processes. 
+
+
+

@@ -1,0 +1,13 @@
+To change the stack pointer after returning from the execption we can do:
+
+
+
+mrs SPSR_ELx, x2
+tbz x2, 0, zero
+
+msr SP_Els  B
+b  finish
+
+zero: msr SP_EL0
+
+finish:

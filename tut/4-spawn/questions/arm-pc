@@ -1,0 +1,14 @@
+We can use MOV lr A. A is the address in immediate value.
+
+We copy the address to lr which ret uses as the return address for the PC.
+
+For the eret, we can use: mov x0  A
+						  msr ELR_ELx x0
+
+
+For the eret instruction, the PC is stored with the value held in the ELR_ELx, and PSTATE is restored by using the contents of SPSR_ELx. ELR_ELx and SPSR_ELx are at the Exception Level the exception is returning from.
+
+
+
+						  
+						  

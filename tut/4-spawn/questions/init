@@ -1,0 +1,37 @@
+start: “The [7:0] bits of the MPIDR_EL1 register (ref: D7.2.74) are read (Aff0), yielding the core number that’s currently executing code. If the number is zero, KERN_STACK_BASE(0x80_000) is set to stack pointer and kinit() is called." from the example.
+
+
+zeros_bss: loop through the bss secttion, from the __bss_beg to __bss_end , write zero in 64 bits.
+
+
+
+switch_to_el2: If the current exception level is 3, set up with Secure Configuration Register which is the or of NS non-secure bit (bit 0), SMD secure monitor bit (bit 7), HCE Hypervisor call enable bit(8), RW execution state control for lower exception level bit(10), and RES1 reserved bits. 
+
+Saved the Programmed state for the Saved Program status Register, which is or of 
+SPsel the M[0] bit is set to 1 which means the exception SP is determined by the execution level, M[3] is set to 1 for exception level 2, F which is SPSR_EL[5] FIQ mask bit, I SPSR_EL[7], IRQ mask bit, A SPSR_EL[8] SError interrupt mask bit, D SPSR_EL[9] Process state D mask. 
+
+
+
+
+switch_to_el1: 
+
+If the current exeception level is 2 run: 
+
+	Set the stack pointer for SP_EL1 register from current stack pointer register as 64 bit. 
+
+	set the CNTHCTL_EL2 register: read the CNTHCTL_EL2 counter-timer hypervisor control register or it with EL0VCTEN and or it with EL0PCTEN
+
+
+
+
+
+Saved the Programmed state for the Saved Program status Register for SPSR_EL2, which is or of SPsel the M[0] bit is set to 1 which means the exception SP is determined by the execution level, M[3] is set to 1 for exception level 2, F which is SPSR_EL[5] FIQ mask bit, I SPSR_EL[7], IRQ mask bit, A SPSR_EL[8] SError interrupt mask bit, D SPSR_EL[9] Process state D mask. 
+
+
+
+
+
+
+
+
+knit:  Runs zeros_bss(), calls switch_to_el2(), calls switch_to_el1(), calls and kmain()

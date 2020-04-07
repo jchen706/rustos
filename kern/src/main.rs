@@ -41,6 +41,7 @@ use vm::VMManager;
 
 //use fat32::traits::FileSystem;
 use fat32::traits::{Dir, Entry};
+use aarch64::*;
 
 #[cfg_attr(not(test), global_allocator)]
 pub static ALLOCATOR: Allocator = Allocator::uninitialized();
@@ -57,6 +58,9 @@ fn kmain() -> ! {
     unsafe {
         ALLOCATOR.initialize();
         FILESYSTEM.initialize();
+        IRQ.initialize();
+        SCHEDULER.initialize();
+        SCHEDULER.start()
     }
 
     use core::fmt::Write;
@@ -68,12 +72,21 @@ fn kmain() -> ! {
 
     use crate::shell::shell;
 
-    String::from("Hi!");
+    //String::from("Hi!");
 
 
-    let s1 = String::from("helllo");
-    let s2 = "h";
-    kprintln!("{}",&s2[..]);
+
+    // let s1 = String::from("helllo");
+    // let s2 = "h";
+    // kprintln!("{}",&s2[..]);
+    //use core::arch::aarch64::brk;
+
+
+    // unsafe{
+    //     kprintln!("{}",current_el());
+    // }
+
+
 
 
     // const GPIO_BASE: usize = 0x3F000000 + 0x200000;
@@ -158,9 +171,26 @@ fn kmain() -> ! {
             //m.write_byte(byte);
             //kprintln!("{}","Start");
 
-           
+        // loop {
 
-            kprintln!("Welcome to cs3210!");
-            shell::shell("> ");
-        
+        //     kprintln!("Welcome to cs3210!");
+        //     shell::shell("> ");
+        //     unsafe{asm!("brk 2" :::: "volatile");}
+
+        // }
+}
+
+
+pub extern fn start_shell() {
+
+    unsafe { asm!("brk 1" :::: "volatile"); }
+    unsafe { asm!("brk 2" :::: "volatile"); }
+    shell::shell("user0> ");
+    unsafe { asm!("brk 3" :::: "volatile"); }
+    loop { shell::shell("user1> "); }
+
+    loop {
+        shell::shell("extern>$ ");
+    }
+
 }

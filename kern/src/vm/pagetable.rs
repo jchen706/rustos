@@ -37,12 +37,26 @@ const_assert_size!(L2PageTable, PAGE_SIZE);
 impl L2PageTable {
     /// Returns a new `L2PageTable`
     fn new() -> L2PageTable {
-        unimplemented!("L2PageTable::new()")
+
+
+        let entry = [RawL2Entry::new(0);8192];
+
+
+
+        L2PageTable {
+
+            entries: entry,
+
+        }
+
+
+
     }
 
     /// Returns a `PhysicalAddr` of the pagetable.
     pub fn as_ptr(&self) -> PhysicalAddr {
-        unimplemented!("L2PageTable::as_ptr()")
+        PhysicalAddr::from(self as *const L2PageTable)
+        //unimplemented!("L2PageTable::as_ptr()")
     }
 }
 
@@ -52,12 +66,20 @@ pub struct L3Entry(RawL3Entry);
 impl L3Entry {
     /// Returns a new `L3Entry`.
     fn new() -> L3Entry {
-        unimplemented!("L3Entry::new()")
+        //unimplemented!("L3Entry::new()")
+
+
+        L3Entry(RawL3Entry::new(0))
+
+
+
     }
 
     /// Returns `true` if the L3Entry is valid and `false` otherwise.
     fn is_valid(&self) -> bool {
-        unimplemented!("L3Entry::is_valid()")
+        //unimplemented!("L3Entry::is_valid()")
+        self.0.get_value(RawL3Entry::VALID)
+    
     }
 
     /// Extracts `ADDR` field of the L3Entry and returns as a `PhysicalAddr`
@@ -98,6 +120,10 @@ impl PageTable {
     /// Entries in L2PageTable should be initialized properly before return.
     fn new(perm: u64) -> Box<PageTable> {
         unimplemented!("PageTable::new()")
+
+
+
+
     }
 
     /// Returns the (L2index, L3index) extracted from the given virtual address.
