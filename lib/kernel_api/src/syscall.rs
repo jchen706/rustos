@@ -2,6 +2,7 @@ use core::fmt;
 use core::fmt::Write;
 use core::time::Duration;
 
+
 use crate::*;
 
 macro_rules! err_or {
@@ -39,19 +40,86 @@ pub fn sleep(span: Duration) -> OsResult<Duration> {
 }
 
 pub fn time() -> Duration {
-    unimplemented!("time()");
+    
+    let mut seconds:u64 = 0;
+    let mut nano:u64 = 0;
+    let mut encode: u64 =0;
+
+    unsafe {
+         asm!("
+              svc $3
+              mov $0, x0
+              mov $1, x1
+              mov $2, x7"
+             : "=r"(seconds), "=r"(nano), "=r"(encode)
+             : "i"(NR_TIME)
+             : "x0", "x1", "x7"
+             : "volatile");
+    }
+
+
+    //println!(" Time is {:?}", seconds);
+
+
+    Duration::from_secs(seconds) + Duration::from_nanos(nano)
+
 }
 
 pub fn exit() -> ! {
-    unimplemented!("exit()");
+  unsafe {
+    asm!("svc $0
+         "::"i"(NR_EXIT)
+          ::"volatile");
+  }
+  loop{}
 }
 
 pub fn write(b: u8) {
-    unimplemented!("write()");
+    //unimplemented!("write()");
+    if b < 0 || b >127 {
+        panic!("Not an Ascii {:?}", b );
+    }
+
+    let mut encode: u64;
+
+    //println!("Writing in kernel API{:?}", b );
+
+    unsafe {
+     asm!("   mov x0, $1
+              svc $2
+              mov $0, x7"
+             :"=r"(encode) 
+             : "r"(b), "i"(NR_WRITE)
+             : "x7"
+             : "volatile");
+    }
+    
+    //println!("Kenerl write {}", encode);
+    //err_or!(ecode, b)
+
+
+
 }
 
 pub fn getpid() -> u64 {
-    unimplemented!("getpid()");
+    //unimplemented!("getpid()");
+    let mut pid:u64;
+    let mut ecode:u64;
+
+    unsafe {
+        asm!(" svc $2
+               mov $0, x0
+               mov $1, x7 
+              ":"=r"(pid), "=r"(ecode)
+               :"i"(NR_GETPID)
+               :"x0", "x7"
+               :"volatile"
+
+
+            );
+    }
+
+    pid
 }
 
 
@@ -84,3 +152,5 @@ pub fn vprint(args: fmt::Arguments) {
     let mut c = Console;
     c.write_fmt(args).unwrap();
 }
+
+

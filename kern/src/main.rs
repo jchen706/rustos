@@ -59,6 +59,7 @@ fn kmain() -> ! {
         ALLOCATOR.initialize();
         FILESYSTEM.initialize();
         IRQ.initialize();
+        VMM.initialize();
         SCHEDULER.initialize();
         SCHEDULER.start()
     }
@@ -79,7 +80,7 @@ fn kmain() -> ! {
     // let s1 = String::from("helllo");
     // let s2 = "h";
     // kprintln!("{}",&s2[..]);
-    //use core::arch::aarch64::brk;
+    // use core::arch::aarch64::brk;
 
 
     // unsafe{

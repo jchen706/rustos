@@ -11,6 +11,7 @@ use pi::interrupt::{Controller, Interrupt};
 
 use self::syndrome::Syndrome;
 use self::syscall::handle_syscall;
+use crate::vm::{PhysicalAddr, VirtualAddr};
 use aarch64::*;
 use crate::IRQ;
 
@@ -46,43 +47,52 @@ pub struct Info {
 #[no_mangle]
 pub extern "C" fn handle_exception(info: Info, esr: u32, tf: &mut TrapFrame) {
 
-    kprintln!("{:?}", info.kind);
-    kprintln!("{:?}", info.source);
-
-    kprintln!("{:?}", esr);
+    //kprintln!("Info Kind{:?}", info.kind);
+    //kprintln!("Info Source {:?}", info.source);
+    //kprintln!("Info ESR{:?}", esr);
 
     match info.kind {
         Kind::Synchronous => {
             match Syndrome::from(esr) {
                  Syndrome::Brk(num) => {
-                    kprintln!("brK {:?}", num);
+                    //kprintln!("brK {:?}", num);
                     tf.elr+=4;
                     shell::shell("debug$ ");
-                    kprintln!("returning {:?}", num);
+                    //kprintln!("returning {:?}", num);
 
                     return 
 
-
-
-
                  },
                  Syndrome::Svc(scall) => {
-                    kprintln!("svc {:?}", scall);
+                    //kprintln!("svc {:?}", scall);
                     handle_syscall(scall, tf);
                     return
 
                  },
+                 Syndrome::DataAbort {kind, level}=>{
+                     
+                            //kprintln!("DataAbort Level: {:?}", level);
+                            unsafe {
+                            panic!("Data Abort VirtualAddr: {:?}", VirtualAddr::from(FAR_EL1.get()));
+
+                            }
+                            aarch64::nop();
+
+                    
+
+                 },
                  _=> {
 
-                     // loop {
-                        //     kprintln!("brK {:?}", "endless loop");
-                        //     aarch64::nop();
-                     // }
+                     panic!(" Unimplemented Syndrome Information Kind: {:?}", info.kind);
+                     aarch64::nop();
+
                  },
              }
 
         },
         Kind::Irq => {
+
+            //kprintln!("irq {:?}", "interrupting");
 
             let control = Controller::new();
             let interrupt1 = Interrupt::iter();

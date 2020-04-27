@@ -13,6 +13,7 @@ context_save:
     stp x14, x15, [SP, #-16]!
     stp x12, x13, [SP, #-16]!
     stp x10, x11, [SP, #-16]!
+
     stp x8, x9, [SP, #-16]!
     stp x6, x7, [SP, #-16]!
     stp x4, x5, [SP, #-16]!
@@ -31,19 +32,14 @@ context_save:
     stp q14, q15, [SP, #-32]!
     stp q12, q13, [SP, #-32]!
     stp q10, q11, [SP, #-32]!
+
     stp q8, q9, [SP, #-32]!
     stp q6, q7, [SP, #-32]!
     stp q4, q5, [SP, #-32]!
     stp q2, q3, [SP, #-32]!
     stp q0, q1, [SP, #-32]!
 
-    mrs x1, TTBR0_EL1
-    mrs x2, TTBR1_EL1
-
-    stp x2, x1, [SP, #-16]! 
-
-   
-
+    
     mrs x1,SP_EL0
     mrs x2,TPIDR_EL0
 
@@ -53,6 +49,11 @@ context_save:
     mrs x2,ELR_EL1
 
     stp x2, x1,  [SP, #-16]!
+
+    mrs x1, TTBR0_EL1
+    mrs x2, TTBR1_EL1
+
+    stp x2, x1, [SP, #-16]! 
 
 
     //move x29 to x0 as first parameter info
@@ -65,11 +66,12 @@ context_save:
 
 
     str lr,  [SP, #-16]!
+  
 
     bl handle_exception
 
 
-
+    
     ldr lr, [SP], #16
 
 
@@ -79,6 +81,17 @@ context_save:
 .global context_restore
 context_restore:
     // FIXME: Restore the context from the stack.
+
+    ldp x2, x1, [SP], #16
+
+    msr TTBR1_EL1, x2
+    msr TTBR0_EL1, x1
+
+    dsb ishst
+    tlbi vmalle1
+    dsb ish
+    isb
+
     ldp x1, x2, [SP], #16
 
     ldp x3, x4, [SP], #16
@@ -90,15 +103,6 @@ context_restore:
     msr TPIDR_EL0, x4
     msr SP_EL0, x3
 
-    ldp x2, x1, [SP], #16
-
-    msr TTBR1_EL1, x2
-    msr TTBR0_EL1, x1
-
-    dsb ishst
-    tlbi vmalle1
-    dsb ish
-    isb
 
      
 
@@ -171,5 +175,3 @@ vectors:
     HANDLER 3,1
     HANDLER 3,2
     HANDLER 3,3
-
-

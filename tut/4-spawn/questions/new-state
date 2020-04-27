@@ -1,0 +1,1 @@
+Scheduler doesn't know what caused the state change. Currently the scheduler only has to worry about if the next process is ready. State change caused by events that are outside the scheduler's control which is not deterministic. 

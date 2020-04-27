@@ -8,6 +8,7 @@ use kernel_api::println;
 use kernel_api::syscall::{getpid, time};
 
 fn fib(n: u64) -> u64 {
+	//println!("fib {:?}", n);
     match n {
         0 => 1,
         1 => 1,
@@ -20,5 +21,21 @@ fn main() {
 
     let rtn = fib(40);
 
+
+
+
+    let pid = getpid();
+    println!("return pi from user: {:?}", pid);
+
+    let current_time = time();
+    println!("time return from user {}", current_time.as_secs());
+
     println!("Ended: Result = {}", rtn);
+
+
+
+
+
+
+
 }

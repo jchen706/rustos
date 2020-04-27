@@ -13,7 +13,7 @@ fn panic(_info: &PanicInfo) -> ! {
         kprintln!("Panic occurred on line {}", location.column());
 
     } else {
-        kprintln!("{:?}", _info.message());
+        kprintln!("Panic error {:?}", _info.message());
     }
 
 

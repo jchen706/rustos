@@ -1,4 +1,6 @@
-We do have to maintain the state of whether SIMD/FP is disable or not, 
+We do have to maintain the state of whether SIMD/FP is disable or not which we need a disable/enable register in the trapframe.
+One way is to utilize one register to account for which SIMD/FP register are used. We only have to check 32 bits to see which registers to restore.
+The FPEN field of CPACR_EL traps the instruction associated with SIMD/FP. If the value of this register is 0bX0, then the  SIMD/FP instructions 
+can be trapped. The exception generated is Symdrome SimdFP. 
 
 
-One to save and restore only the registers being used from the callee side. So for the trap frame, 

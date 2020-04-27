@@ -1,0 +1,1 @@
+The advantage is that if a return value for a call uses all the bits in the register, the value would not get contaminated. The disadvantage is that we used a register that could have been used for other return values, so we could have wasted a register.

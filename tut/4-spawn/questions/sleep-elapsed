@@ -1,0 +1,4 @@
+The sleep syscall in a process is checked every time the timer interrupt occurs which the waiting state will be return as ready when the scheduler checks the process.
+This can cause the return value to vary based on the timer of the scheduler. 
+
+If there is sleep time is divisible by the scheduler timer interrupt time, then the return and input values can be identical. There is higher relative probablity that the input and output values to differ as the timer interrupt is now in 10 milliseconds and the number of processes in the  schduler can change which will affect the how the scheduler schedules processes.

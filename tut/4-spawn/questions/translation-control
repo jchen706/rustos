@@ -1,0 +1,10 @@
+For the page table our design is using only two entries in the L2 Pagetable which means we only need 1 bit so the bit 29 on the virtual address is the index into the L2 Pagetable.
+The TTBR select address will still be all 1's for the TTBR1 (user page table) and 0's for the TTBR0_EL1 for the kernel page table.
+
+
+For the TTBR Select, our design will contain the unused bits from the L2 Pagetable translation which will be [63:30], and the L2 Page table index bit will be VA[29].
+L3 Pagetable bits are unchange at [28:16]. 
+
+
+
+So basically, the MMU now has to index into the TTBR Select with all 1's to make sure to take the TTBR1 pagetable address.

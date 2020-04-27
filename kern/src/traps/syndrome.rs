@@ -72,7 +72,7 @@ impl From<u32> for Syndrome {
         //il 25 indicate whether 32 or 16 for synchronous
         // iss 24-0 instruction specific syndrome field
         let ec = ESR_EL1::get_value(esr as u64, ESR_EL1::EC);
-        kprintln!("{:?}", ec);
+    
 
         let ec:u8 = (esr >> 26) as u8; 
         let iss = esr & 0xFFFFFF;
@@ -95,8 +95,8 @@ impl From<u32> for Syndrome {
             0b100001 => InstructionAbort { kind: Fault::from(esr), level: 1 }, //same
 
             0b100010 => PCAlignmentFault,
-            0b100100 =>   DataAbort { kind: Fault::from(esr), level: 0 }, //lower
-            0b100101 =>   DataAbort { kind: Fault::from(esr), level: 1 }, //same
+            0b100100 =>   DataAbort { kind: Fault::from(esr), level: (esr & 0b11 as u32 ) as u8 }, //lower
+            0b100101 =>   DataAbort { kind: Fault::from(esr), level: (esr & 0b11 as u32) as u8}, //same
 
             0b100110 =>   SpAlignmentFault,
             0b101100 =>   TrappedFpu,
