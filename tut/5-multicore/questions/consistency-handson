@@ -1,0 +1,32 @@
+Program 1
+A = 1  (1)
+print!("{}", B);  (2)
+
+
+
+
+Program 2
+print!("{}", A) (3)
+B = 1   (4)
+
+
+
+
+SC:  
+Possible case : process running: 1 , 2 , 3 , 4 = 01
+				process running: 3, 4 , 1 , 2 = 01
+				process running: 1, 3, 2, 4 = 10
+				process running 3,1,4,2 = 10
+
+
+
+TSO:process running: 1 , 2 , 3 , 4 = 01
+	process running: 3, 4 , 1 , 2 = 01
+	process running: 1, 3, 2, 4 = 10
+	process running 3,1,4,2 = 10
+	The outcome 00 is possible as println can be lag when the assignment is written into the cache.
+	I don't think 11 is possible here as B or A will be print if written into the cache.
+
+
+
+ARM: 01, 10, 00, 11 are all possible since is weak consistency.

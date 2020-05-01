@@ -56,7 +56,7 @@ pub static FILESYSTEM: FileSystem = FileSystem::uninitialized();
 pub static SCHEDULER: GlobalScheduler = GlobalScheduler::uninitialized();
 pub static VMM: VMManager = VMManager::uninitialized();
 pub static USB: Usb = Usb::uninitialized();
-pub static GLOABAL_IRQ: GlobalIrq = GlobalIrq::new();
+pub static GLOBAL_IRQ: GlobalIrq = GlobalIrq::new();
 pub static FIQ: Fiq = Fiq::new();
 pub static ETHERNET: GlobalEthernetDriver = GlobalEthernetDriver::uninitialized();
 
@@ -79,28 +79,36 @@ unsafe fn kmain() -> ! {
         &__bss_beg as *const _ as u64, &__bss_end as *const _ as u64
     );
 
-fn kmain() -> ! {
+    ALLOCATOR.initialize();
+    FILESYSTEM.initialize();
+    //IRQ.initialize();
+    VMM.initialize();
+    SCHEDULER.initialize();
+    init::initialize_app_cores();
+    VMM.wait();
     
-    spin_sleep(Duration::new(2,0));
-    //panic!("Working Panic");
+    SCHEDULER.start()
 
-    unsafe {
-        ALLOCATOR.initialize();
-        FILESYSTEM.initialize();
-        IRQ.initialize();
-        VMM.initialize();
-        SCHEDULER.initialize();
-        SCHEDULER.start()
-    }
 
-    use core::fmt::Write;
+}
 
-    use pi::timer::spin_sleep;
-    use core::time::Duration;
-    use pi::gpio::Gpio;
-    use pi::uart::MiniUart;
+// fn kmain() -> ! {
+    
+//     spin_sleep(Duration::new(2,0));
+//     //panic!("Working Panic");
 
-    use crate::shell::shell;
+//     unsafe {
+       
+//     }
+
+//     use core::fmt::Write;
+
+//     use pi::timer::spin_sleep;
+//     use core::time::Duration;
+//     use pi::gpio::Gpio;
+//     use pi::uart::MiniUart;
+
+//     use crate::shell::shell;
 
     //String::from("Hi!");
 
@@ -208,7 +216,7 @@ fn kmain() -> ! {
         //     unsafe{asm!("brk 2" :::: "volatile");}
 
         // }
-}
+//}
 
 
 pub extern fn start_shell() {

@@ -14,7 +14,7 @@ use pi::timer::current_time;
 use crate::process::Process;
 
 use crate::console::kprintln;
-use crate::console::kprint;
+
 
 /// Sleep for `ms` milliseconds.
 ///
@@ -106,15 +106,11 @@ pub fn sys_time(tf: &mut TrapFrame) {
 ///
 /// This system call does not take paramer and does not return any value.
 pub fn sys_exit(tf: &mut TrapFrame) {
-<<<<<<< HEAD
    //unimplemented!("sys_exit()");
 
  kprintln!("Process: {:?} is switch into dead state", tf.tpidr); 
  let a = SCHEDULER.switch(State::Dead, tf);
    
-=======
-    unimplemented!("sys_exit()")
->>>>>>> skeleton/lab5
 }
 
 /// Writes to console.
@@ -123,7 +119,7 @@ pub fn sys_exit(tf: &mut TrapFrame) {
 ///
 /// It only returns the usual status value.
 pub fn sys_write(b: u8, tf: &mut TrapFrame) {
-<<<<<<< HEAD
+
     //unimplemented!("sys_write()");
     
  
@@ -139,13 +135,7 @@ pub fn sys_write(b: u8, tf: &mut TrapFrame) {
       }
       
 
-    
-   
 
-
-=======
-    unimplemented!("sys_write()")
->>>>>>> skeleton/lab5
 }
 
 /// Returns the current process's ID.
@@ -155,7 +145,7 @@ pub fn sys_write(b: u8, tf: &mut TrapFrame) {
 /// In addition to the usual status value, this system call returns a
 /// parameter: the current process's ID.
 pub fn sys_getpid(tf: &mut TrapFrame) {
-<<<<<<< HEAD
+
     //unimplemented!("sys_getpid()");
     //let id = tf.tpidr;
     tf.x[0]= tf.tpidr;
@@ -163,46 +153,7 @@ pub fn sys_getpid(tf: &mut TrapFrame) {
     
 }
 
-pub fn handle_syscall(num: u16, tf: &mut TrapFrame) {
-    use crate::console::kprintln;
-    //unimplemented!("handle_syscall()")
 
-
-    if num == 1 {
-      kprintln!(" Before calling SLEEP x[0] parameter {:?}", tf.x[0]);
-    	sys_sleep(tf.x[0] as u32,tf);
-    
-    } else if num == 2 {
-      kprintln!(" Before calling TIMER");
-
-      sys_time(tf);
-    } else if num == 3 {
-      kprintln!(" Before sys_exit");
-
-      sys_exit(tf);
-    }  else if num == 4 {
-      //kprintln!(" Before calling writing x[0] parameter {:?}", tf.x[0]);
-
-      sys_write(tf.x[0] as u8 , tf);
-    }  else if num == 5 {
-      kprintln!("Get PID");
-
-      sys_getpid(tf);
-    }
-
-    else {
-    	tf.x[7] = OsError::Ok as u64;
-    }
-
-
-
-
-
-
-
-=======
-    unimplemented!("sys_getpid()")
-}
 
 /// Creates a socket and saves the socket handle in the current process's
 /// socket list.
@@ -371,18 +322,57 @@ pub fn sys_write_str(va: usize, len: usize, tf: &mut TrapFrame) {
         Ok(msg) => {
             kprint!("{}", msg);
 
-            tf.xs[0] = msg.len() as u64;
-            tf.xs[7] = OsError::Ok as u64;
+            tf.x[0] = msg.len() as u64;
+            tf.x[7] = OsError::Ok as u64;
         }
         Err(e) => {
-            tf.xs[7] = e as u64;
+            tf.x[7] = e as u64;
         }
     }
 }
 
+
+
 pub fn handle_syscall(num: u16, tf: &mut TrapFrame) {
-    unimplemented!("handle_syscall()")
->>>>>>> skeleton/lab5
+    use crate::console::kprintln;
+    //unimplemented!("handle_syscall()")
+
+
+    if num == 1 {
+      kprintln!(" Before calling SLEEP x[0] parameter {:?}", tf.x[0]);
+      sys_sleep(tf.x[0] as u32,tf);
+    
+    } else if num == 2 {
+      kprintln!(" Before calling TIMER");
+
+      sys_time(tf);
+    } else if num == 3 {
+      kprintln!(" Before sys_exit");
+
+      sys_exit(tf);
+    }  else if num == 4 {
+      //kprintln!(" Before calling writing x[0] parameter {:?}", tf.x[0]);
+
+      sys_write(tf.x[0] as u8 , tf);
+    }  else if num == 5 {
+      kprintln!("Get PID");
+
+      sys_getpid(tf);
+    } else if num == 6 {
+      sys_write_str(tf.x[0] as usize, tf.x[1] as usize, tf);
+    }
+
+    else {
+      tf.x[7] = OsError::Ok as u64;
+    }
+
+
+
+
+
+
+
+    //unimplemented!("sys_getpid()")
 }
 
 

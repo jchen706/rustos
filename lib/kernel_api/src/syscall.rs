@@ -120,23 +120,48 @@ pub fn getpid() -> u64 {
     }
 
     pid
-    unimplemented!("time()")
+    //unimplemented!("time()")
 }
 
-pub fn exit() -> ! {
-    unimplemented!("exit()")
-}
-
-pub fn write(b: u8) {
-    unimplemented!("write()")
 
 pub fn write_str(msg: &str) {
-    unimplemented!("write_str()")
+    //unimplemented!("write_str()")
+
+    //let mut pid:u64;
+    let mut ecode:u64;
+    //pointer to string
+
+    //len of string
+    let ptr = msg.as_ptr() as u64;
+    let len = msg.len() as u64;
+
+    unsafe {
+        asm!(" mov x0, $2 
+               mov x1, $3 
+               svc $4
+               mov $0, x0
+               mov $1, x7 
+              ":"=r"(len), "=r"(ecode)
+               :"r"(ptr), "r"(len), "i"(NR_WRITE_STR)
+               :"x0", "x7"
+               :"volatile"
+
+
+            );
+    }
+
+
+
+
+
+
+
+
 }
 
-pub fn getpid() -> u64 {
-    unimplemented!("getpid()")
-}
+// pub fn getpid() -> u64 {
+//     unimplemented!("getpid()")
+// }
 
 pub fn sock_create() -> SocketDescriptor {
     // Lab 5 2.D

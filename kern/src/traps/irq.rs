@@ -6,6 +6,8 @@ use pi::local_interrupt::LocalInterrupt;
 
 use crate::mutex::Mutex;
 use crate::traps::TrapFrame;
+use crate::console::kprintln;
+
 
 // Programmer Guide Chapter 10
 // AArch64 Exception Handling
@@ -37,14 +39,13 @@ impl GlobalIrq {
     }
 }
 
-<<<<<<< HEAD
-use crate::console::kprintln;
 
 
-impl Irq {
-    pub const fn uninitialized() -> Irq {
-        Irq(Mutex::new(None))
-=======
+// impl Irq {
+//     pub const fn uninitialized() -> Irq {
+//         Irq(Mutex::new(None))
+//     }
+// }
 impl LocalIrq {
     pub const fn new() -> LocalIrq {
         LocalIrq([
@@ -61,7 +62,6 @@ impl LocalIrq {
             Mutex::new(None),
             Mutex::new(None),
         ])
->>>>>>> skeleton/lab5
     }
 }
 
@@ -121,69 +121,76 @@ where
     T: Index<I, Output = IrqHandlerMutex>,
 {
     /// Register an irq handler for an interrupt.
-<<<<<<< HEAD
     /// The caller should assure that `initialize()` has been called before calling this function.
-    pub fn register(&self, int: Interrupt, handler: IrqHandler) {
-        //unimplemented!("Irq::register()")
-
-        self.0.lock().as_mut().unwrap()[Interrupt::to_index(int)] = Some(handler); 
-
-
-
-    }
-
-    /// Executes an irq handler for the givven interrupt.
-    /// The caller should assure that `initialize()` has been called before calling this function.
-    pub fn invoke(&self, int: Interrupt, tf: &mut TrapFrame) {
-
-        //unimplemented!("Irq::register()")
-        //let b:_ = self.0.lock().as_mut().unwrap()[Interrupt::to_index(int)];
-
-        //let _:() = self.0.lock().as_mut().unwrap()[Interrupt::to_index(int)].unwrap();
-        //self.0.lock().as_mut().unwrap()[Interrupt::to_index(int)].unwrap()(tf);
-
-        // match &self.0.lock().as_mut().unwrap()[Interrupt::to_index(int)] {
-
-        //     Some(mut x)=> {
-        //         let b:_ = x;
-        //         x(tf);
-
-
-        //     },
-        //     _=> return,
-
-
-        // }
-
-        match *self.0.lock() {
-            Some(ref mut handlers) =>{
-
-                //let _:()= handlers;
-                //&mut [core::option::Option<alloc::boxed::Box<(dyn for<'r> core::ops::FnMut(&'r mut traps::frame::TrapFrame) + core::marker::Send + 'static)>>; 8]
-
-                //let b = handlers;//[ rrupt::to_index(int)];
-                //function
-                handlers[Interrupt::to_index(int)].as_mut().unwrap()(tf);
-
-            },
-
-            _=>return,
-
-        }
-
-
-
-
-=======
+    /// 
     fn register(&self, int: I, handler: IrqHandler) {
-        unimplemented!("register()")
+        *(self.index(int).lock()) = Some(handler);
+
+
+        //unimplemented!("register()")
     }
 
     /// Executes an irq handler for the given interrupt.
     fn invoke(&self, int: I, tf: &mut TrapFrame) {
-        unimplemented!("invoke()")
->>>>>>> skeleton/lab5
+        //unimplemented!("invoke()")
+
+        match &mut *(self.index(int).lock()) {
+            Some(handler)=>handler(tf),
+            None=> panic!(" invoke interrupt handler {:?}"),
+        }
     }
+    // pub fn register(&self, int: Interrupt, handler: IrqHandler) {
+    //     //unimplemented!("Irq::register()")
+
+    //     self.0.lock().as_mut().unwrap()[Interrupt::to_index(int)] = Some(handler); 
+
+
+
+    // }
+
+    //Executes an irq handler for the givven interrupt.
+    //The caller should assure that `initialize()` has been called before calling this function.
+    // pub fn invoke(&self, int: Interrupt, tf: &mut TrapFrame) {
+
+    //     //unimplemented!("Irq::register()")
+    //     //let b:_ = self.0.lock().as_mut().unwrap()[Interrupt::to_index(int)];
+
+    //     //let _:() = self.0.lock().as_mut().unwrap()[Interrupt::to_index(int)].unwrap();
+    //     //self.0.lock().as_mut().unwrap()[Interrupt::to_index(int)].unwrap()(tf);
+
+    //     // match &self.0.lock().as_mut().unwrap()[Interrupt::to_index(int)] {
+
+    //     //     Some(mut x)=> {
+    //     //         let b:_ = x;
+    //     //         x(tf);
+
+
+    //     //     },
+    //     //     _=> return,
+
+
+    //     // }
+
+    //     match *self.0.lock() {
+    //         Some(ref mut handlers) =>{
+
+    //             //let _:()= handlers;
+    //             //&mut [core::option::Option<alloc::boxed::Box<(dyn for<'r> core::ops::FnMut(&'r mut traps::frame::TrapFrame) + core::marker::Send + 'static)>>; 8]
+
+    //             //let b = handlers;//[ rrupt::to_index(int)];
+    //             //function
+    //             handlers[Interrupt::to_index(int)].as_mut().unwrap()(tf);
+
+    //         },
+
+    //         _=>return,
+
+    //     }
+
+
+
+
+ 
 }
 
 

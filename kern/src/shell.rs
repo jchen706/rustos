@@ -19,7 +19,7 @@ use crate::FILESYSTEM;
 
 use pi::timer::spin_sleep;
 use core::time::Duration;
-use kernel_api::syscall::sleep;
+//use traps::syscall::sleep;
 use kernel_api::{OsError, OsResult};
 
 
@@ -146,17 +146,17 @@ pub fn shell(prefix: &str) {
 
                                 match a.args[1].parse::<u64>() {
                                     Ok(num) => {
-                                        let error1 = sleep(Duration::from_millis(num as u64));
-                                            match error1 {
+                                        let error1 = spin_sleep(Duration::from_millis(num as u64));
+                                            // match error1 {
 
-                                                Ok(_)=> {
-                                                    kprintln!("{}", "Sleep function success");
+                                            //     Ok(Ok(_))=> {
+                                            //         kprintln!("{}", "Sleep function success");
 
-                                                },
-                                                _=> {
-                                                    kprintln!("{:?}", error1);
-                                                }
-                                            }
+                                            //     },
+                                            //     _=> {
+                                            //         kprintln!("{:?}", error1);
+                                            //     }
+                                            // }
                                     },
                                     Err(e)=> {
 

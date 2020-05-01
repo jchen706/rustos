@@ -33,15 +33,20 @@ impl VMManager {
     /// Initializes the virtual memory manager.
     /// The caller should assure that the method is invoked only once during the kernel
     /// initialization.
-    pub fn initialize(&self) {
-        //unimplemented!();
-        *self.0.lock() = Some(KernPageTable::new());
+  
+    pub unsafe fn initialize(&self) {
 
-        self.setup();
+
+        let kern_table = KernPageTable::new();
+        let kern_pt_addr = kern_table.get_baddr().as_u64();
+
+        self.kern_pt_addr.store(kern_pt_addr as usize, Ordering::Relaxed);
+        *self.kern_pt.lock() = Some(kern_table);
+
+
+
+
     }
-    // pub unsafe fn initialize(&self) {
-    //     unimplemented!()
-    // }
 
     /// Set up the virtual memory manager for the current core.
     /// The caller should assure that `initialize()` has been called before calling this function.
@@ -105,19 +110,36 @@ impl VMManager {
             self.setup();
         }
 
+
+        
+
+
+        let core_num = self.ready_core_cnt.fetch_add(1, Ordering::SeqCst);
+
         info!("MMU is ready for core-{}/@sp={:016x}", affinity(), SP.get());
 
+        loop {
+
+            if self.ready_core_cnt.load(Ordering::Acquire) < pi::common::NCORES {
+                nop()
+            } else {
+                break;
+            }
+
+
+        }
+        //''
+       
+        
+
+
         // Lab 5 1.B
-        unimplemented!("wait for other cores")
+        //unimplemented!("wait for other cores")
     }
 
     /// Returns the base address of the kernel page table as `PhysicalAddr`.
     pub fn get_baddr(&self) -> PhysicalAddr {
-<<<<<<< HEAD
         //unimplemented!();
-        self.0.lock().as_ref().unwrap().get_baddr()
-=======
-        unimplemented!()
->>>>>>> skeleton/lab5
+        self.kern_pt.lock().as_ref().unwrap().get_baddr()
     }
 }

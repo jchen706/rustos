@@ -10,6 +10,7 @@ use crate::kmain;
 use crate::param::*;
 use crate::VMM;
 
+
 global_asm!(include_str!("init/vectors.s"));
 
 //
@@ -119,7 +120,9 @@ unsafe fn kinit() -> ! {
 #[no_mangle]
 pub unsafe extern "C" fn start2() -> ! {
     // Lab 5 1.A
-    unimplemented!("start2")
+    //unimplemented!("start2")
+    SP.set(KERN_STACK_BASE - (KERN_STACK_SIZE * MPIDR_EL1.get_value(MPIDR_EL1::Aff0) as usize));
+    kinit2()
 }
 
 unsafe fn kinit2() -> ! {
@@ -130,12 +133,31 @@ unsafe fn kinit2() -> ! {
 
 unsafe fn kmain2() -> ! {
     // Lab 5 1.A
-    unimplemented!("kmain2")
+    //unimplemented!("kmain2")
+    let core_index = affinity();
+    write_volatile(SPINNING_BASE.add(core_index), 0);
+
+    loop {
+        info!("d {:?}","s");
+    }
+    VMM.wait();
+    
+
+
+    
 }
 
 /// Wakes up each app core by writing the address of `init::start2`
 /// to their spinning base and send event with `sev()`.
 pub unsafe fn initialize_app_cores() {
     // Lab 5 1.A
-    unimplemented!("initialize_app_cores")
+    //unimplemented!("initialize_app_cores")
+     for core_index in 1..NCORES {
+        let core_spin_ptr = SPINNING_BASE.add(core_index);
+        write_volatile(core_spin_ptr, start2 as usize);
+        asm::sev();
+    }
+
+    
+
 }

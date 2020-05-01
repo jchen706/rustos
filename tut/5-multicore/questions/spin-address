@@ -1,0 +1,2 @@
+Linux solves the spinning address problem by the core address defined in the Linux device tree file. The Linux device tree describes the hardware components of the Raspberry Pi so the kernel can manage and utilize the core presentable in the spin table.
+

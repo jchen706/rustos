@@ -45,7 +45,7 @@ pub struct Process {
     pub state: State,
 
     // Lab 5 2.C
-    /// Socket handles held by the current process
+    // Socket handles held by the current process
     // pub sockets: Vec<SocketHandle>,
 
 }

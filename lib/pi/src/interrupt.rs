@@ -1,12 +1,10 @@
 use crate::common::IO_BASE;
 
 use volatile::prelude::*;
-<<<<<<< HEAD
+
 use volatile::{Volatile, ReadVolatile};
 use volatile::Reserved;
-=======
-use volatile::{ReadVolatile, Volatile};
->>>>>>> skeleton/lab5
+
 
 const INT_BASE: usize = IO_BASE + 0xB000 + 0x200;
 

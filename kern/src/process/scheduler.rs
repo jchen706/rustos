@@ -20,7 +20,6 @@ use crate::percore::{get_preemptive_counter, is_mmu_ready, local_irq};
 use crate::process::{Id, Process, State};
 use crate::traps::irq::IrqHandlerRegistry;
 use crate::traps::TrapFrame;
-<<<<<<< HEAD
 //extern crate main;
 //use start_shell;
 use crate::console::kprintln;
@@ -28,16 +27,15 @@ use crate::shell;
 use pi::timer::Timer;
 use pi::interrupt::{Controller, Interrupt};
 use pi::timer::tick_in;
+use crate::GLOBAL_IRQ;
 
 use crate::SCHEDULER;
-use crate::IRQ;
+//use crate::IRQ;
 
 
 
 use crate::VMM;
-=======
 use crate::{ETHERNET, USB};
->>>>>>> skeleton/lab5
 
 
 /// Process scheduler for the entire machine.
@@ -92,20 +90,17 @@ impl GlobalScheduler {
                     affinity(),
                     id,
                     tf.elr,
-                    tf.xs[30],
-                    tf.xs[29],
-                    tf.xs[28],
-                    tf.xs[27]
+                    tf.x[30],
+                    tf.x[29],
+                    tf.x[28],
+                    tf.x[27]
                 );
                 return id;
             }
-<<<<<<< HEAD
             //kprintln!("right before wfe");
-            aarch64::wfe();
-=======
+            //aarch64::wfe();
 
             aarch64::wfi();
->>>>>>> skeleton/lab5
         }
     }
 
@@ -134,14 +129,7 @@ impl GlobalScheduler {
         kprintln!("{:?}", "SCHEDULER start function");
 
         let mut trap_fp = TrapFrame::default();
-        Controller::new().enable(Interrupt::Timer1);
-
-        //kprintln!("{:?}", "here");
-        IRQ.register(Interrupt::Timer1, Box::new(|trap_fp| {
-            tick_in(TICK);
-            SCHEDULER.switch(State::Ready, trap_fp);
-
-        }));
+       self.initialize_global_timer_interrupt();
 
         // timer_handler
         tick_in(TICK);
@@ -269,7 +257,15 @@ impl GlobalScheduler {
     /// Registers a timer handler with `Usb::start_kernel_timer` which will
     /// invoke `poll_ethernet` after 1 second.
     pub fn initialize_global_timer_interrupt(&self) {
-        unimplemented!("initialize_global_timer_interrupt()")
+        //unimplemented!("initialize_global_timer_interrupt()")
+        Controller::new().enable(Interrupt::Timer1);
+
+        //kprintln!("{:?}", "here");
+        GLOBAL_IRQ.register(Interrupt::Timer1, Box::new(|trap_fp| {
+            tick_in(TICK);
+            SCHEDULER.switch(State::Ready, trap_fp);
+
+        }));
     }
 
     /// Initializes the per-core local timer interrupt with `pi::local_interrupt`.
@@ -375,14 +371,7 @@ impl GlobalScheduler {
 
     }
 
-<<<<<<< HEAD
-
-   
-
-    // The following method may be useful for testing Phase 3:
-=======
     // The following method may be useful for testing Lab 4 Phase 3:
->>>>>>> skeleton/lab5
     //
     // * A method to load a extern function to the user process's page table.
     //
@@ -415,17 +404,14 @@ pub struct Scheduler {
 
 impl Scheduler {
     /// Returns a new `Scheduler` with an empty queue.
-<<<<<<< HEAD
-    fn new() -> Scheduler {
+    fn new() -> Box<Scheduler> {
         //unimplemented!("Scheduler::new()")
-        Scheduler {
+
+        Box::new(
+         Scheduler {
             processes:VecDeque::new(),
             last_id:None,
-        }
-=======
-    fn new() -> Box<Scheduler> {
-        unimplemented!("Scheduler::new()")
->>>>>>> skeleton/lab5
+        })
     }
 
     /// Adds a process to the scheduler's queue and returns that process's ID if
@@ -686,72 +672,3 @@ pub extern "C" fn  test_user_process() -> ! {
         }
     }
 }
-<<<<<<< HEAD
-
-
-
-
-
-
-
-pub extern fn start_shell() {
-
-    unsafe { asm!("brk 1" :::: "volatile"); }
-    unsafe { asm!("brk 2" :::: "volatile"); }
-    shell::shell("user0> ");
-    unsafe { asm!("brk 3" :::: "volatile"); }
-    loop { shell::shell("user111111> "); }
-
-    loop {
-        shell::shell("extern111111>$ ");
-    }
-
-}
-
-
-pub extern fn start_shell1() {
-
-    unsafe { asm!("brk 1" :::: "volatile"); }
-    unsafe { asm!("brk 2" :::: "volatile"); }
-    shell::shell("user0> ");
-    unsafe { asm!("brk 3" :::: "volatile"); }
-    loop { shell::shell("user77777> "); }
-
-    loop {
-        shell::shell("extern77777>$ ");
-    }
-
-}
-
-
-pub extern fn start_shell2() {
-
-    unsafe { asm!("brk 1" :::: "volatile"); }
-    unsafe { asm!("brk 2" :::: "volatile"); }
-    shell::shell("user0888> ");
-    unsafe { asm!("brk 3" :::: "volatile"); }
-    loop { shell::shell("user18888> "); }
-
-    loop {
-        shell::shell("extern8888>$ ");
-    }
-
-}
-
-
-pub extern fn start_shell3() {
-
-    unsafe { asm!("brk 1" :::: "volatile"); }
-    unsafe { asm!("brk 2" :::: "volatile"); }
-    shell::shell("user999> ");
-    unsafe { asm!("brk 3" :::: "volatile"); }
-    loop { shell::shell("user9999> "); }
-
-    loop {
-        shell::shell("extern999>$ ");
-    }
-
-}
-
-=======
->>>>>>> skeleton/lab5

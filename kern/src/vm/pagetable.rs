@@ -137,20 +137,29 @@ impl PageTable {
         let mut pt = Box::new(
             PageTable {
                 l2:  L2PageTable::new(),
-                l3: [L3PageTable::new(), L3PageTable::new()],
+                l3: [L3PageTable::new(), L3PageTable::new(), L3PageTable::new()],
             });
 
 
         pt.l2.entries[0].set_masked(pt.l3[0].as_ptr().as_u64(), RawL2Entry::ADDR);
-        pt.l2.entries[1].set_masked(pt.l3[1].as_ptr().as_u64(), RawL2Entry::ADDR);
+        pt.l2.entries[1].set_masked(pt.l3[1].as_ptr().as_u64(), RawL2Entry::ADDR);        
+        pt.l2.entries[2].set_masked(pt.l3[2].as_ptr().as_u64(), RawL2Entry::ADDR);
+
 
         pt.l2.entries[0].set_value(EntryType::Table, RawL2Entry::TYPE);
         pt.l2.entries[0].set_value(EntryValid::Valid, RawL2Entry::VALID);
         pt.l2.entries[0].set_value(perm, RawL2Entry::AP);
 
+
         pt.l2.entries[1].set_value(EntryType::Table, RawL2Entry::TYPE);
         pt.l2.entries[1].set_value(EntryValid::Valid, RawL2Entry::VALID);
         pt.l2.entries[1].set_value(perm, RawL2Entry::AP);
+
+
+        pt.l2.entries[2].set_value(EntryType::Table, RawL2Entry::TYPE);
+        pt.l2.entries[2].set_value(EntryValid::Valid, RawL2Entry::VALID);
+        pt.l2.entries[2].set_value(perm, RawL2Entry::AP);
+
 
 
 
@@ -351,7 +360,6 @@ impl UserPageTable {
     /// TODO. use Result<T> and make it failurable
     /// TODO. use perm properly
     pub fn alloc(&mut self, va: VirtualAddr, _perm: PagePerm) -> &mut [u8] {
-<<<<<<< HEAD
         //unimplemented!("alloc()");
 
         if va.as_usize() < USER_IMG_BASE {
@@ -418,9 +426,7 @@ impl UserPageTable {
 
 
 
-=======
-        unimplemented!("alloc()")
->>>>>>> skeleton/lab5
+        //unimplemented!("alloc()")
     }
 }
 

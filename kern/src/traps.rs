@@ -14,9 +14,11 @@ use self::syndrome::Syndrome;
 use self::syscall::handle_syscall;
 use crate::vm::{PhysicalAddr, VirtualAddr};
 use aarch64::*;
-use crate::IRQ;
+//use crate::IRQ;
 use crate::percore;
 use crate::traps::irq::IrqHandlerRegistry;
+
+use crate::GLOBAL_IRQ;
 
 #[repr(u16)]
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
@@ -96,16 +98,48 @@ pub extern "C" fn handle_exception(info: Info, esr: u32, tf: &mut TrapFrame) {
         Kind::Irq => {
 
             //kprintln!("irq {:?}", "interrupting");
+            let core: u64 = 0;
+            unsafe {
+            let core =  MPIDR_EL1.get_value(MPIDR_EL1::Aff0);
+            };
 
-            let control = Controller::new();
-            let interrupt1 = Interrupt::iter();
 
-            for each in interrupt1 {
-                if control.is_pending(*each) {
-                    IRQ.invoke(*each, tf);
+            if core == 0 {
+                let control = Controller::new();
+                let interrupt1 = Interrupt::iter();
 
+
+
+                for each in interrupt1 {
+                 //let m:()=each;
+                    if control.is_pending(each) {
+                        GLOBAL_IRQ.invoke(each, tf);
+
+                    }
                 }
+
+            } else {
+                let control1 = LocalController::new(core as usize);
+                 let interrupt1 = LocalInterrupt::iter();
+
+
+
+                for each in interrupt1 {
+                 //let m:()=each;
+                    if control1.is_pending(each) {
+                        percore::local_irq().invoke(each, tf);
+
+                    }
+                }
+
+
+
+
             }
+
+
+
+            
 
 
 
