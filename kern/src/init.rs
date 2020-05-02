@@ -9,6 +9,7 @@ mod panic;
 use crate::kmain;
 use crate::param::*;
 use crate::VMM;
+use crate::SCHEDULER;
 
 
 global_asm!(include_str!("init/vectors.s"));
@@ -137,10 +138,16 @@ unsafe fn kmain2() -> ! {
     let core_index = affinity();
     write_volatile(SPINNING_BASE.add(core_index), 0);
 
-    loop {
-        info!("d {:?}","s");
-    }
+    
+    info!("kmain2 core_index {:?}", core_index);
+    
     VMM.wait();
+
+    
+
+    loop {
+
+    }
     
 
 

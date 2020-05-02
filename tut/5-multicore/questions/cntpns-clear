@@ -1,0 +1,1 @@
+To clear a bit we can write to the CNTPNS_IRQ register or set it to 0 at the index to clear.

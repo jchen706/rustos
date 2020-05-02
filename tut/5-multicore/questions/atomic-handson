@@ -2,10 +2,10 @@
 mov x0, #0
 mov x1, addr of counter
 loop:
-    ldr x2, [x1]
-    add x2, x2, #1
-    str x2, [x1]
-    add x0, x0, #1
+    
+    ldadda x1, x1, [x1]
+   
+    ldadda x0, x0, [x0]
     cmp x0, #1000
     ble loop
 
@@ -13,9 +13,9 @@ loop:
 mov x0, #0
 mov x1, addr of counter
 loop:
-    ldr x2, [x1]
-    add x2, x2, #1
-    str x2, [x1]
-    add x0, x0, #1
+    
+    ldadda x1, x1, [x1]
+   
+    ldadda x0, x0, [x0]
     cmp x0, #1000
     ble loop

@@ -2,6 +2,8 @@ use core::cell::UnsafeCell;
 use core::fmt;
 use core::ops::{Deref, DerefMut, Drop};
 use core::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use aarch64::MPIDR_EL1;
+use crate::percore;
 
 #[repr(align(32))]
 pub struct Mutex<T> {
@@ -34,14 +36,43 @@ impl<T> Mutex<T> {
     // Once MMU/cache is enabled, do the right thing here. For now, we don't
     // need any real synchronization.
     pub fn try_lock(&self) -> Option<MutexGuard<T>> {
-        let this = 0;
-        if !self.lock.load(Ordering::Relaxed) || self.owner.load(Ordering::Relaxed) == this {
+        // let this = 0;
+        // if !self.lock.load(Ordering::Relaxed) || self.owner.load(Ordering::Relaxed) == this {
+        //     self.lock.store(true, Ordering::Relaxed);
+        //     self.owner.store(this, Ordering::Relaxed);
+        //     Some(MutexGuard { lock: &self })
+        // } else {
+        //     None
+        // }
+
+        if percore::is_mmu_ready() {
+            if !self.lock.compare_and_swap(false , true ,Ordering::SeqCst) {
+                 self.owner.store(percore::getcpu(), Ordering::Release);
+                 Some(MutexGuard { lock: &self })
+
+            } else {
+                None
+            }
+
+        } else {
+
+            let this: usize = 0;
+            unsafe {
+            let this =  MPIDR_EL1.get_value(MPIDR_EL1::Aff0) as usize;
+            };
+            if !self.lock.load(Ordering::Relaxed) || self.owner.load(Ordering::Relaxed) == this {
             self.lock.store(true, Ordering::Relaxed);
             self.owner.store(this, Ordering::Relaxed);
             Some(MutexGuard { lock: &self })
-        } else {
-            None
+            } else {
+                None
+            }
+
         }
+
+
+
+
     }
 
     // Once MMU/cache is enabled, do the right thing here. For now, we don't
@@ -49,6 +80,7 @@ impl<T> Mutex<T> {
     #[inline(never)]
     pub fn lock(&self) -> MutexGuard<T> {
         // Wait until we can "aquire" the lock, then "acquire" it.
+
         loop {
             match self.try_lock() {
                 Some(guard) => return guard,
@@ -58,7 +90,35 @@ impl<T> Mutex<T> {
     }
 
     fn unlock(&self) {
-        self.lock.store(false, Ordering::Relaxed);
+
+        
+        if percore::is_mmu_ready() {
+
+            let this: usize = 0;
+            unsafe {
+                let this =  MPIDR_EL1.get_value(MPIDR_EL1::Aff0) as usize;
+            };
+
+            debug!("Core number: {:?} ", this);
+
+            if self.owner.load(Ordering::Acquire) == this {
+
+                self.lock.store(false, Ordering::Release);
+
+                if percore::get_preemptive_counter() != 0 {
+
+                    percore::putcpu(this);
+                }
+            }
+
+
+
+
+        } else {
+            self.lock.store(false, Ordering::Relaxed);
+
+
+        }
     }
 }
 
